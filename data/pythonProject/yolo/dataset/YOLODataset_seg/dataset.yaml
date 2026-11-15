@@ -1,0 +1,6 @@
+train: D:\zxy\pythonProject\dataset\data\YOLODataset_seg/images/train/
+val: D:\zxy\pythonProject\dataset\data\YOLODataset_seg/images/val/
+
+nc: 1
+
+names: ['defect1']

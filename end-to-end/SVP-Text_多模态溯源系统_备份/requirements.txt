@@ -1,0 +1,14 @@
+torch
+torchvision
+transformers
+peft
+bitsandbytes
+ultralytics
+sahi
+opencv-python
+pillow
+neo4j
+fastapi
+uvicorn
+python-multipart
+

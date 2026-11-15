@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flask 应用</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #e9ecef;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h1, h2 {
+            color: #007BFF; /* 变为蓝色 */
+            text-align: center;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF; /* 变为蓝色 */
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3; /* 深蓝色 */
+        }
+        .output {
+            margin-top: 20px;
+            font-weight: bold;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: #f9f9f9;
+        }
+        .aspect-ratios {
+            margin-top: 20px;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .aspect-ratios .form-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .aspect-ratios input[type="number"] {
+            width: 45%; /* 宽度为45% */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>欢迎使用 Flask 应用</h1>
+        <h2>图像处理</h2>
+        <form id="process-images-form">
+            <div class="form-group">
+                <label for="base-folder">基础文件夹路径:</label>
+                <input type="text" id="base-folder" name="base_folder" placeholder="输入基础文件夹路径" required>
+            </div>
+            <div class="form-group">
+                <label for="output-base-folder">输出文件夹路径:</label>
+                <input type="text" id="output-base-folder" name="output_base_folder" placeholder="输入输出文件夹路径" required>
+            </div>
+            <div class="form-group">
+                <label for="threshold2">阈值2:</label>
+                <input type="number" id="threshold2" name="threshold2" placeholder="输入阈值2" required>
+            </div>
+            <button type="submit">处理图像</button>
+        </form>
+        <div class="output" id="image-processing-output"></div>
+        <h2>生成报告</h2>
+        <form id="generate-report-form">
+            <div class="form-group">
+                <label for="base-image-folder">基础图像文件夹路径:</label>
+                <input type="text" id="base-image-folder" name="base_image_folder" placeholder="输入基础图像文件夹路径" required>
+            </div>
+            <div class="form-group">
+                <label for="template-path">模板路径:</label>
+                <input type="text" id="template-path" name="template_path" placeholder="输入模板路径" required>
+            </div>
+            <div class="form-group">
+                <label for="output-folder">输出文件夹路径:</label>
+                <input type="text" id="output-folder" name="output_folder" placeholder="输入输出文件夹路径" required>
+            </div>
+            <h3>调整图片比例 (宽 x 高):</h3>
+            <div class="aspect-ratios" id="aspect-ratios">
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_1_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_1_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_2_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_2_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_3_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_3_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_4_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_4_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_5_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_5_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_6_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_6_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_7_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_7_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_8_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_8_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_9_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_9_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_10_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_10_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_11_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_11_height" placeholder="高度" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" name="aspect_ratio_12_width" placeholder="宽度" required>
+                    <input type="number" name="aspect_ratio_12_height" placeholder="高度" required>
+                </div>
+            </div>
+            <button type="submit">生成报告</button>
+        </form>
+        <div class="output" id="report-output"></div>
+    </div>
+    <script>
+        document.getElementById('process-images-form').onsubmit = function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const jsonData = Object.fromEntries(formData);
+            fetch('/process_images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const currentTime = new Date().toLocaleString();
+                document.getElementById('image-processing-output').textContent = `处理结果: ${data.status}，处理时间: ${currentTime}`;
+            });
+        };
+
+        document.getElementById('generate-report-form').onsubmit = function(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const jsonData = Object.fromEntries(formData);
+            const aspectRatios = [];
+            for (let i = 1; i <= 12; i++) {
+                const width = formData.get(`aspect_ratio_${i}_width`);
+                const height = formData.get(`aspect_ratio_${i}_height`);
+                if (width && height) {
+                    aspectRatios.push([parseInt(width), parseInt(height)]);
+                }
+            }
+            jsonData.aspect_ratios = aspectRatios;
+            fetch('/generate_report', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const currentTime = new Date().toLocaleString();
+                document.getElementById('report-output').textContent = `报告生成成功: ${data.report}，生成时间: ${currentTime}`;
+            })
+            .catch(error => {
+                document.getElementById('report-output').textContent = `生成报告时出错: ${error.message}`;
+            });
+        };
+    </script>
+</body>
+</html>

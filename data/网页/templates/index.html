@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📘 通用年度降价计算系统 v8.8</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calculator"></i> 通用年度降价计算系统</h1>
+            <div class="version">版本 v8.8</div>
+            <button class="history-btn" onclick="window.location.href='/history'">
+                <i class="fas fa-history"></i> 历史记录
+            </button>
+        </header>
+
+        <div class="content">
+            <div class="info-box">
+                <p><strong>系统说明：</strong> 本系统用于计算年度降价数据，支持基准价优先匹配、自动推算基准价、颜色标记等功能。</p>
+                <p><strong>使用流程：</strong></p>
+                <ul>
+                    <li>上传三个必需文件：需做的降价表、降价数据模板、基准价表</li>
+                    <li>点击"开始计算"按钮处理数据</li>
+                    <li>查看处理进度并下载结果文件</li>
+                </ul>
+            </div>
+
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <h2>上传文件</h2>
+                </div>
+
+                <form id="upload-form">
+                    <div class="form-group">
+                        <label for="raw_file"><i class="fas fa-file-excel"></i> 需做的降价表：</label>
+                        <div class="file-input-container">
+                            <div class="file-input" id="raw-file-input">
+                                <span>点击选择文件</span>
+                                <i class="fas fa-file-import"></i>
+                            </div>
+                            <input type="file" name="raw_file" id="raw_file" accept=".xlsx" class="hidden">
+                        </div>
+                        <div class="file-name" id="raw-file-name">未选择文件</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="template_file"><i class="fas fa-file-alt"></i> 降价数据模板：</label>
+                        <div class="file-input-container">
+                            <div class="file-input" id="template-file-input">
+                                <span>点击选择文件</span>
+                                <i class="fas fa-file-import"></i>
+                            </div>
+                            <input type="file" name="template_file" id="template_file" accept=".xlsx" class="hidden">
+                        </div>
+                        <div class="file-name" id="template-file-name">未选择文件</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="baseline_file"><i class="fas fa-file-contract"></i> 基准价表：</label>
+                        <div class="file-input-container">
+                            <div class="file-input" id="baseline-file-input">
+                                <span>点击选择文件</span>
+                                <i class="fas fa-file-import"></i>
+                            </div>
+                            <input type="file" name="baseline_file" id="baseline_file" accept=".xlsx" class="hidden">
+                        </div>
+                        <div class="file-name" id="baseline-file-name">未选择文件</div>
+                    </div>
+
+                    <button type="button" id="start-btn" class="btn btn-block">
+                        <i class="fas fa-play-circle"></i> 开始计算
+                    </button>
+                </form>
+            </div>
+
+            <div id="task-status" class="section hidden">
+                <div class="section-title">
+                    <i class="fas fa-tasks"></i>
+                    <h2>任务状态</h2>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-header">
+                        <span>处理进度</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
+
+                <div class="status-message" id="status-message">
+                    <i class="fas fa-info-circle"></i> 正在初始化任务...
+                </div>
+            </div>
+
+            <div id="result-section" class="section hidden">
+                <div class="section-title">
+                    <i class="fas fa-file-download"></i>
+                    <h2>计算结果</h2>
+                </div>
+
+                <p>处理完成！请下载以下结果文件：</p>
+
+                <div class="result-files">
+                    <a href="#" id="download-result" class="download-btn">
+                        <i class="fas fa-file-excel"></i>
+                        <span>降价结果.xlsx</span>
+                    </a>
+
+                    <a href="#" id="download-raise" class="download-btn">
+                        <i class="fas fa-chart-line"></i>
+                        <span>涨价的料号.xlsx</span>
+                    </a>
+
+                    <a href="#" id="download-done" class="download-btn">
+                        <i class="fas fa-check-circle"></i>
+                        <span>原表标记.xlsx</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="legend">
+                <h3><i class="fas fa-palette"></i> 颜色标记说明：</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="color-box yellow"></div>
+                        <span>降价月份数据</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box blue"></div>
+                        <span>自动推算的基准价</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box red"></div>
+                        <span>同料号多供应商</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 文件选择处理
+        document.getElementById('raw_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+            document.getElementById('raw-file-name').textContent = fileName;
+        });
+
+        document.getElementById('template_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+            document.getElementById('template-file-name').textContent = fileName;
+        });
+
+        document.getElementById('baseline_file').addEventListener('change', function(e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '未选择文件';
+            document.getElementById('baseline-file-name').textContent = fileName;
+        });
+
+        // 点击文件输入区域触发文件选择
+        document.getElementById('raw-file-input').addEventListener('click', function() {
+            document.getElementById('raw_file').click();
+        });
+
+        document.getElementById('template-file-input').addEventListener('click', function() {
+            document.getElementById('template_file').click();
+        });
+
+        document.getElementById('baseline-file-input').addEventListener('click', function() {
+            document.getElementById('baseline_file').click();
+        });
+
+        // 开始计算按钮
+        document.getElementById('start-btn').addEventListener('click', function() {
+            const rawFile = document.getElementById('raw_file').files[0];
+            const templateFile = document.getElementById('template_file').files[0];
+            const baselineFile = document.getElementById('baseline_file').files[0];
+
+            if (!rawFile || !templateFile || !baselineFile) {
+                alert('请上传所有必需文件');
+                return;
+            }
+
+            // 禁用按钮并显示加载状态
+            const btn = document.getElementById('start-btn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 处理中...';
+            btn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('raw_file', rawFile);
+            formData.append('template_file', templateFile);
+            formData.append('baseline_file', baselineFile);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.task_id) {
+                    document.getElementById('task-status').classList.remove('hidden');
+                    monitorTask(data.task_id);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('上传失败，请重试');
+                btn.innerHTML = '<i class="fas fa-play-circle"></i> 开始计算';
+                btn.disabled = false;
+            });
+        });
+
+        function monitorTask(taskId) {
+            const progressFill = document.getElementById('progress-fill');
+            const progressText = document.getElementById('progress-text');
+            const statusMessage = document.getElementById('status-message');
+
+            function checkStatus() {
+                fetch(`/task/${taskId}`)
+                    .then(response => response.json())
+                    .then(task => {
+                        const progress = task.progress || 0;
+                        progressFill.style.width = `${progress}%`;
+                        progressText.textContent = `${progress}%`;
+                        statusMessage.innerHTML = `<i class="fas fa-info-circle"></i> ${task.message}`;
+
+                        if (task.status === 'running') {
+                            setTimeout(checkStatus, 1000);
+                        } else if (task.status === 'completed') {
+                            showResults(taskId);
+                            // 恢复按钮状态
+                            const btn = document.getElementById('start-btn');
+                            btn.innerHTML = '<i class="fas fa-play-circle"></i> 开始计算';
+                            btn.disabled = false;
+                        } else if (task.status === 'error') {
+                            alert(`处理错误: ${task.error || task.message}`);
+                            // 恢复按钮状态
+                            const btn = document.getElementById('start-btn');
+                            btn.innerHTML = '<i class="fas fa-play-circle"></i> 开始计算';
+                            btn.disabled = false;
+                        }
+                    });
+            }
+
+            checkStatus();
+        }
+
+        function showResults(taskId) {
+            const resultSection = document.getElementById('result-section');
+            resultSection.classList.remove('hidden');
+
+            document.getElementById('download-result').href = `/download/${taskId}/result`;
+            document.getElementById('download-raise').href = `/download/${taskId}/raise`;
+            document.getElementById('download-done').href = `/download/${taskId}/done`;
+
+            // 平滑滚动到结果区域
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

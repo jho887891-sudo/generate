@@ -1,0 +1,3251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对账系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+        }
+
+        /* 用户信息栏样式 */
+        .user-info-bar {
+            background: linear-gradient(90deg, #2c3e50, #34495e);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-welcome {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .user-details h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .user-details .user-role {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 15px 0 30px;
+            color: #2c3e50;
+            font-size: 2.4rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tablink {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 0;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tablink::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            transition: height 0.3s ease;
+            z-index: -1;
+        }
+
+        .tablink:hover {
+            color: white;
+        }
+
+        .tablink:hover::before {
+            height: 100%;
+        }
+
+        .tablink.active {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabcontent.active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.6rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        p {
+            margin-bottom: 25px;
+            color: #5a6268;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .file-upload {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            border: 2px dashed #e0e7ff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-upload:hover {
+            border-color: #3498db;
+            background-color: #f0f8ff;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .file-upload label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .file-upload label::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+
+        .file-input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-input:hover {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .file-input-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        button:hover::after {
+            left: 120%;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .loading {
+            background: linear-gradient(90deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.1rem;
+            animation: pulse 1.5s infinite;
+            border: 1px solid #bbdefb;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .success {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: #2e7d32;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.1);
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+            text-decoration: none;
+        }
+
+        .download-btn:hover::after {
+            left: 120%;
+        }
+
+        .download-btn + .download-btn {
+            background: linear-gradient(to right, #17a2b8, #138496);
+        }
+
+        .download-btn + .download-btn:hover {
+            background: linear-gradient(to right, #138496, #117a8b);
+        }
+
+        .progress-container {
+            width: 100%;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 5px;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: #5a6268;
+            font-weight: 500;
+        }
+
+        .progress-message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .upload-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .upload-speed {
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .file-size {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            padding: 12px;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .file-preview p {
+            margin: 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .file-preview strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .preview-icon {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        .instructions {
+            background-color: #f0f8ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        .sub-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sub-tablink {
+            padding: 12px 20px;
+            background: #e0e7ff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.3s ease;
+        }
+
+        .sub-tablink:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .sub-tablink.active {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .sub-tabcontent {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sub-tabcontent.active {
+            display: block;
+        }
+
+        .batch-progress {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            display: none;
+        }
+
+        .batch-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .batch-progress-text {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .batch-progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .batch-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .batch-file-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .batch-file-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .batch-file-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #e0e0e0;
+        }
+
+        .batch-file-status.completed {
+            background-color: #2ecc71;
+        }
+
+        .batch-file-status.processing {
+            background-color: #3498db;
+            animation: pulse 1s infinite;
+        }
+
+        .batch-file-status.failed {
+            background-color: #e74c3c;
+        }
+
+        .batch-file-name {
+            flex: 1;
+        }
+
+        .cancel-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        /* 历史记录页面样式 */
+        .history-filter {
+            background: #f5f7fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background: white;
+        }
+
+        .filter-btn {
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: #2980b9;
+        }
+
+        .history-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .history-table th,
+        .history-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+
+        .history-table tr:hover {
+            background: #f5f7fa;
+        }
+
+        .history-table tr.expired {
+            color: #999;
+        }
+
+        .history-table tr.expired .download-action {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .download-action {
+            background: #2ecc71;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .download-action:hover:not(:disabled) {
+            background: #27ae60;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .pagination-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .pagination-btn:hover:not(:disabled) {
+            background: #2980b9;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #777;
+        }
+
+        .close-modal:hover {
+            color: #333;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .file-name {
+            flex: 1;
+            word-break: break-all;
+        }
+
+        .download-file-btn {
+            background: #3498db;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-left: 10px;
+            transition: background 0.3s;
+        }
+
+        .download-file-btn:hover {
+            background: #2980b9;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 20px;
+            color: #777;
+        }
+
+        /* 权限提示样式 */
+        .permission-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        /* 角色权限样式 */
+        .role-restricted {
+            position: relative;
+        }
+
+        .role-overlay {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 10;
+            border-radius: 8px;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .role-overlay.active {
+            display: flex;
+        }
+
+        .role-icon {
+            font-size: 3rem;
+            color: #e74c3c;
+            margin-bottom: 15px;
+        }
+
+        .role-message {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .role-submessage {
+            color: #7f8c8d;
+            text-align: center;
+        }
+
+        /* 登录页面样式 */
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            text-align: center;
+        }
+
+        .login-form {
+            margin-top: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .login-submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        .login-submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-message {
+            margin-top: 15px;
+            min-height: 20px;
+            font-size: 0.9rem;
+        }
+
+        .login-error {
+            color: #e74c3c;
+            background: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #e74c3c;
+        }
+
+        .login-success {
+            color: #27ae60;
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 4px solid #27ae60;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                max-width: 95%;
+            }
+
+            h1 {
+                font-size: 2rem;
+                padding-bottom: 10px;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tablink {
+                border-radius: 8px;
+                margin-bottom: 5px;
+            }
+
+            .tabcontent {
+                padding: 20px;
+            }
+
+            .download-btn {
+                display: block;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .sub-tabs {
+                flex-direction: column;
+            }
+
+            .sub-tablink {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+
+            .history-filter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .user-info-bar {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .user-actions {
+                justify-content: center;
+            }
+
+            .login-container {
+                margin: 50px auto;
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                background: #f4f4f4;
+            }
+
+            .container {
+                padding: 20px 15px;
+                border-radius: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 2rem;
+            }
+
+            .file-upload {
+                padding: 12px;
+            }
+
+            input[type="file"] {
+                padding: 10px;
+                font-size: 0.95rem;
+            }
+
+            button {
+                padding: 14px;
+                font-size: 1rem;
+            }
+
+            .download-btn {
+                padding: 12px;
+                font-size: 1rem;
+                min-width: auto;
+            }
+
+            .result {
+                min-height: 100px;
+            }
+
+            .loading, .success, .error {
+                padding: 20px;
+            }
+        }
+
+        .icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #2c3e50;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div id="loginPage" class="login-container" style="display: none;">
+        <h1><i class="fas fa-user-lock"></i> 对账系统</h1>
+        <p>请登录以使用系统功能</p>
+
+        <form id="loginForm" class="login-form">
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> 用户名</label>
+                <input type="text" id="username" name="username" required placeholder="请输入用户名" class="form-input">
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> 密码</label>
+                <input type="password" id="password" name="password" required placeholder="请输入密码" class="form-input">
+            </div>
+
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMe" name="remember_me">
+                <label for="rememberMe">记住我</label>
+            </div>
+
+            <button type="submit" class="login-submit-btn">
+                <i class="fas fa-sign-in-alt"></i> 登录
+            </button>
+
+            <div id="loginMessage" class="login-message"></div>
+        </form>
+    </div>
+
+    <!-- 主应用页面 -->
+    <div class="container" id="mainContainer" style="display: none;">
+        <!-- 用户信息栏 -->
+        <div class="user-info-bar" id="userInfoBar">
+            <div class="user-welcome">
+                <div class="user-avatar">
+                    <i class="fas fa-user"></i>
+                </div>
+                <div class="user-details">
+                    <h3 id="currentUserName">未登录</h3>
+                    <div class="user-role" id="currentUserRole">请先登录</div>
+                </div>
+            </div>
+            <div class="user-actions">
+                <button class="logout-btn" onclick="logout()" id="logoutBtn" style="display: none;">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
+            </div>
+        </div>
+
+        <!-- 主内容区域（登录后显示） -->
+        <div id="mainContent" style="display: none;">
+            <h1>对账系统</h1>
+
+            <div class="tabs">
+                <button class="tablink active" onclick="openTab('ocrTab')">
+                    <i class="fas fa-file-pdf"></i> OCR识别
+                </button>
+                <button class="tablink" onclick="openTab('reconcileTab')">
+                    <i class="fas fa-file-excel"></i> 对账功能
+                </button>
+                <button class="tablink" onclick="openTab('dataTab')">
+                    <i class="fas fa-database"></i> 数据处理
+                </button>
+                <button class="tablink" onclick="openTab('historyTab')">
+                    <i class="fas fa-history"></i> 历史记录
+                </button>
+            </div>
+
+            <!-- OCR识别标签页 -->
+            <div id="ocrTab" class="tabcontent active">
+                <h2><i class="fas fa-file-pdf"></i> PDF转Excel工具</h2>
+                <p>上传PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                    <ul>
+                        <li>支持PDF格式文件（可多选）</li>
+                        <li>文件大小不超过50MB</li>
+                        <li>处理时间取决于文件大小</li>
+                        <li>处理完成后可下载Excel文件</li>
+                    </ul>
+                </div>
+
+                 <!-- 子标签页导航 -->
+                <div class="sub-tabs">
+                    <button class="sub-tablink active" onclick="openSubTab('weiwaiTab')">
+                        <i class="fas fa-file-contract"></i> 委外OCR识别
+                    </button>
+                    <button class="sub-tablink" onclick="openSubTab('purchaseTab')">
+                        <i class="fas fa-shopping-cart"></i> 采购OCR识别
+                    </button>
+                </div>
+
+                <!-- 委外OCR识别子标签页 -->
+                <div id="weiwaiTab" class="sub-tabcontent active">
+                    <h3><i class="fas fa-file-contract"></i> 委外OCR识别</h3>
+                    <p>上传委外相关的PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>支持多文件批量上传</li>
+                            <li>系统自动识别委外送货单内容</li>
+                            <li>处理完成后可下载Excel文件</li>
+                            <li>支持处理进度监控和取消操作</li>
+                        </ul>
+                    </div>
+
+                    <form id="weiwaiForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="weiwaiFiles">选择PDF文件:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="weiwaiFiles" name="weiwai_files" accept=".pdf" multiple required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('weiwaiFiles').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="weiwaiPreview">
+                            <p><i class="fas fa-file-pdf preview-icon"></i> <strong>已选择文件:</strong> <span id="weiwaiFileCount">0</span> 个</p>
+                            <div id="weiwaiFileList"></div>
+                        </div>
+
+                        <!-- 上传进度条容器 -->
+                        <div class="progress-container" id="weiwaiUploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="weiwaiUploadProgressBar"></div>
+                            </div>
+                            <div class="progress-text" id="weiwaiUploadProgressText">0%</div>
+                            <div class="upload-info">
+                                <span class="upload-speed" id="weiwaiUploadSpeed">0 KB/s</span>
+                                <span class="file-size" id="weiwaiFileSize">0 MB</span>
+                            </div>
+                        </div>
+
+                        <!-- 处理进度条容器 -->
+                        <div class="progress-container" id="weiwaiProcessProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="weiwaiProcessProgressBar"></div>
+                            </div>
+                            <div class="progress-text" id="weiwaiProcessProgressText">0%</div>
+                            <div class="progress-message" id="weiwaiProcessProgressMessage">等待开始处理...</div>
+                        </div>
+
+                        <!-- 批量处理进度 -->
+                        <div class="batch-progress" id="weiwaiBatchProgress">
+                            <div class="batch-progress-header">
+                                <div class="batch-progress-text">
+                                    正在处理: <span id="weiwaiCurrentFileNumber">0</span> / <span id="weiwaiTotalFiles">0</span>
+                                </div>
+                                <div id="weiwaiCurrentFileName"></div>
+                            </div>
+                            <div class="batch-progress-bar">
+                                <div class="batch-progress-fill" id="weiwaiBatchProgressBar"></div>
+                            </div>
+                            <div class="batch-file-list" id="weiwaiBatchFileList"></div>
+                        </div>
+
+                        <button type="button" onclick="processWeiwai()" id="weiwaiProcessBtn">
+                            <i class="fas fa-cogs"></i> 开始处理
+                        </button>
+
+                        <button class="cancel-btn" onclick="cancelWeiwaiProcessing()" id="weiwaiCancelBtn" style="display: none;">
+                            <i class="fas fa-times-circle"></i> 取消处理
+                        </button>
+                    </form>
+
+                    <div id="weiwaiResult" class="result"></div>
+                </div>
+
+                <!-- 采购OCR识别子标签页 -->
+                <div id="purchaseTab" class="sub-tabcontent">
+                    <h3><i class="fas fa-shopping-cart"></i> 采购OCR识别</h3>
+                    <p>上传采购相关的PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>支持多文件批量上传</li>
+                            <li>系统自动识别采购送货单内容</li>
+                            <li>处理完成后可下载Excel文件</li>
+                            <li>支持处理进度监控和取消操作</li>
+                        </ul>
+                    </div>
+
+                    <form id="purchaseForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="purchaseFiles">选择PDF文件:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="purchaseFiles" name="purchase_files" accept=".pdf" multiple required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('purchaseFiles').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="purchasePreview">
+                            <p><i class="fas fa-file-pdf preview-icon"></i> <strong>已选择文件:</strong> <span id="purchaseFileCount">0</span> 个</p>
+                            <div id="purchaseFileList"></div>
+                        </div>
+
+                        <!-- 上传进度条容器 -->
+                        <div class="progress-container" id="purchaseUploadProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="purchaseUploadProgressBar"></div>
+                            </div>
+                            <div class="progress-text" id="purchaseUploadProgressText">0%</div>
+                            <div class="upload-info">
+                                <span class="upload-speed" id="purchaseUploadSpeed">0 KB/s</span>
+                                <span class="file-size" id="purchaseFileSize">0 MB</span>
+                            </div>
+                        </div>
+
+                        <!-- 处理进度条容器 -->
+                        <div class="progress-container" id="purchaseProcessProgress">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="purchaseProcessProgressBar"></div>
+                            </div>
+                            <div class="progress-text" id="purchaseProcessProgressText">0%</div>
+                            <div class="progress-message" id="purchaseProcessProgressMessage">等待开始处理...</div>
+                        </div>
+
+                        <!-- 批量处理进度 -->
+                        <div class="batch-progress" id="purchaseBatchProgress">
+                            <div class="batch-progress-header">
+                                <div class="batch-progress-text">
+                                    正在处理: <span id="purchaseCurrentFileNumber">0</span> / <span id="purchaseTotalFiles">0</span>
+                                </div>
+                                <div id="purchaseCurrentFileName"></div>
+                            </div>
+                            <div class="batch-progress-bar">
+                                <div class="batch-progress-fill" id="purchaseBatchProgressBar"></div>
+                            </div>
+                            <div class="batch-file-list" id="purchaseBatchFileList"></div>
+                        </div>
+
+                        <button type="button" onclick="processPurchase()" id="purchaseProcessBtn">
+                            <i class="fas fa-cogs"></i> 开始处理
+                        </button>
+
+                        <button class="cancel-btn" onclick="cancelPurchaseProcessing()" id="purchaseCancelBtn" style="display: none;">
+                            <i class="fas fa-times-circle"></i> 取消处理
+                        </button>
+                    </form>
+
+                    <div id="purchaseResult" class="result"></div>
+                </div>
+            </div>
+
+            <!-- 对账功能标签页 -->
+            <div id="reconcileTab" class="tabcontent">
+                <h2><i class="fas fa-file-excel"></i> 对账功能</h2>
+                <p>选择对账类型并上传相应文件进行对账处理</p>
+
+                <!-- 子标签页 -->
+                <div class="sub-tabs">
+                    <button class="sub-tablink active" onclick="openSubTab('weiwaiReconcileTab')">
+                        <i class="fas fa-file-contract"></i> 委外对账
+                    </button>
+                    <button class="sub-tablink" onclick="openSubTab('weiwaiReceiptTab')">
+                        <i class="fas fa-receipt"></i> 委外收据对账
+                    </button>
+                    <button class="sub-tablink" onclick="openSubTab('purchaseReconcileTab')">
+                        <i class="fas fa-shopping-cart"></i> 采购对账
+                    </button>
+                    <button class="sub-tablink" onclick="openSubTab('purchaseReceiptTab')">
+                        <i class="fas fa-file-invoice"></i> 采购收据对账
+                    </button>
+                </div>
+
+                <!-- 委外对账子标签页 -->
+                <div id="weiwaiReconcileTab" class="sub-tabcontent active">
+                    <h3><i class="fas fa-file-contract"></i> 委外对账</h3>
+                    <p>上传委外收据表和委外总表，系统将自动进行对账处理</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>需要上传两个Excel文件：委外收据表和委外总表</li>
+                            <li>文件格式支持.xlsx和.xls</li>
+                            <li>系统将生成对账结果和日志文件</li>
+                            <li>处理完成后可下载结果文件</li>
+                        </ul>
+                    </div>
+
+                    <form id="weiwaiReconcileForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="weiwaiReceiptFile">选择委外收据表:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="weiwaiReceiptFile" name="weiwai_receipt_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('weiwaiReceiptFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-upload">
+                            <label for="weiwaiTotalFile">选择委外总表:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="weiwaiTotalFile" name="weiwai_total_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('weiwaiTotalFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="weiwaiReconcilePreview">
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>委外收据表:</strong> <span id="weiwaiReceiptFileName"></span></p>
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>委外总表:</strong> <span id="weiwaiTotalFileName"></span></p>
+                        </div>
+
+                        <button type="button" onclick="reconcileWeiwai()">
+                            <i class="fas fa-cogs"></i> 开始对账
+                        </button>
+                    </form>
+
+                    <div id="weiwaiReconcileResult" class="result"></div>
+                </div>
+
+                <!-- 委外收据对账子标签页 -->
+                <div id="weiwaiReceiptTab" class="sub-tabcontent">
+                    <h3><i class="fas fa-receipt"></i> 委外收据对账</h3>
+                    <p>上传委外入库单和委外送货单，系统将自动进行对账处理</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>需要上传两个Excel文件：委外入库单和委外送货单</li>
+                            <li>文件格式支持.xlsx和.xls</li>
+                            <li>系统将生成对账结果和日志文件</li>
+                            <li>处理完成后可下载结果文件</li>
+                        </ul>
+                    </div>
+
+                    <form id="weiwaiReceiptForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="weiwaiReceiptInputFile">选择委外入库单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="weiwaiReceiptInputFile" name="weiwai_receipt_input_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('weiwaiReceiptInputFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-upload">
+                            <label for="weiwaiDeliveryFile">选择委外送货单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="weiwaiDeliveryFile" name="weiwai_delivery_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('weiwaiDeliveryFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="weiwaiReceiptPreview">
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>委外入库单:</strong> <span id="weiwaiReceiptInputFileName"></span></p>
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>委外送货单:</strong> <span id="weiwaiDeliveryFileName"></span></p>
+                        </div>
+
+                        <button type="button" onclick="reconcileWeiwaiReceipt()">
+                            <i class="fas fa-cogs"></i> 开始对账
+                        </button>
+                    </form>
+
+                    <div id="weiwaiReceiptResult" class="result"></div>
+                </div>
+
+                <!-- 采购对账子标签页 -->
+                <div id="purchaseReconcileTab" class="sub-tabcontent">
+                    <h3><i class="fas fa-shopping-cart"></i> 采购对账</h3>
+                    <p>上传采购收据单和采购对账单，系统将自动进行对账处理</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>需要上传两个Excel文件：采购收据单和采购对账单</li>
+                            <li>文件格式支持.xlsx和.xls</li>
+                            <li>系统将生成对账结果和日志文件</li>
+                            <li>处理完成后可下载结果文件</li>
+                        </ul>
+                    </div>
+
+                    <form id="purchaseReconcileForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="purchaseReceiptFile">选择采购收据单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="purchaseReceiptFile" name="purchase_receipt_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('purchaseReceiptFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-upload">
+                            <label for="purchaseStatementFile">选择采购对账单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="purchaseStatementFile" name="purchase_statement_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('purchaseStatementFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="purchaseReconcilePreview">
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购收据单:</strong> <span id="purchaseReceiptFileName"></span></p>
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购对账单:</strong> <span id="purchaseStatementFileName"></span></p>
+                        </div>
+
+                        <button type="button" onclick="reconcilePurchase()">
+                            <i class="fas fa-cogs"></i> 开始对账
+                        </button>
+                    </form>
+
+                    <div id="purchaseReconcileResult" class="result"></div>
+                </div>
+
+                <!-- 采购收据对账子标签页 -->
+                <div id="purchaseReceiptTab" class="sub-tabcontent">
+                    <h3><i class="fas fa-file-invoice"></i> 采购收据对账</h3>
+                    <p>上传采购单和入库单，系统将自动进行对账处理</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>需要上传两个Excel文件：采购单和入库单</li>
+                            <li>文件格式支持.xlsx和.xls</li>
+                            <li>系统将生成对账结果和日志文件</li>
+                            <li>处理完成后可下载结果文件</li>
+                        </ul>
+                    </div>
+
+                    <form id="purchaseReceiptForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="purchaseDeliveryFile">选择采购单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="purchaseDeliveryFile" name="purchase_delivery_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('purchaseDeliveryFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-upload">
+                            <label for="purchaseInventoryFile">选择入库单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="purchaseInventoryFile" name="purchase_inventory_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('purchaseInventoryFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="purchaseReceiptPreview">
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购单:</strong> <span id="purchaseDeliveryFileName"></span></p>
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>入库单:</strong> <span id="purchaseInventoryFileName"></span></p>
+                        </div>
+
+                        <button type="button" onclick="reconcilePurchaseReceipt()">
+                            <i class="fas fa-cogs"></i> 开始对账
+                        </button>
+                    </form>
+
+                    <div id="purchaseReceiptResult" class="result"></div>
+                </div>
+            </div>
+
+            <!-- 数据处理标签页 -->
+            <div id="dataTab" class="tabcontent">
+                <h2><i class="fas fa-database"></i> 数据处理工具</h2>
+                <p>选择数据处理类型并上传相应文件</p>
+
+                <!-- 子标签页 -->
+                <div class="sub-tabs">
+                    <button class="sub-tablink active" onclick="openSubTab('negativeTab')">
+                        <i class="fas fa-calculator"></i> 数量取负
+                    </button>
+                    <button class="sub-tablink" onclick="openSubTab('priceTab')">
+                        <i class="fas fa-tag"></i> 单价处理
+                    </button>
+                </div>
+
+                <!-- 数量取负子标签页 -->
+                <div id="negativeTab" class="sub-tabcontent active">
+                    <h3><i class="fas fa-calculator"></i> Excel数量取负工具</h3>
+                    <p>上传Excel文件，系统将自动将"数量"列的值取负（乘以-1）</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>仅支持Excel格式文件（.xlsx, .xls）</li>
+                            <li>文件必须包含"数量"列</li>
+                            <li>处理完成后可下载修改后的文件</li>
+                            <li>原始文件不会被修改</li>
+                        </ul>
+                    </div>
+
+                    <form id="negativeForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="negativeFile">选择Excel文件:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="negativeFile" name="negative_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('negativeFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="negativePreview">
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>文件名:</strong> <span id="negativeFileName"></span></p>
+                            <p><strong>文件大小:</strong> <span id="negativeFileSizePreview"></span></p>
+                        </div>
+
+                        <button type="button" onclick="processNegative()">
+                            <i class="fas fa-cogs"></i> 开始处理
+                        </button>
+                    </form>
+
+                    <div id="negativeResult" class="result"></div>
+                </div>
+
+                <!-- 单价处理子标签页 -->
+                <div id="priceTab" class="sub-tabcontent">
+                    <h3><i class="fas fa-tag"></i> Excel单价处理工具</h3>
+                    <p>上传价格表和对账单，系统将自动匹配单价并计算金额</p>
+
+                    <div class="instructions">
+                        <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                        <ul>
+                            <li>需要上传两个Excel文件：价格表和对账单</li>
+                            <li>文件格式支持.xlsx和.xls</li>
+                            <li>系统将匹配物料单价并计算金额</li>
+                            <li>处理完成后可下载修改后的文件</li>
+                        </ul>
+                    </div>
+
+                    <form id="priceForm" enctype="multipart/form-data">
+                        <div class="file-upload">
+                            <label for="priceListFile">选择价格表:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="priceListFile" name="price_list_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('priceListFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="file-upload">
+                            <label for="invoiceFile">选择对账单:</label>
+                            <div class="file-input-container">
+                                <input type="file" id="invoiceFile" name="invoice_file" accept=".xlsx,.xls" required class="file-input">
+                                <div class="file-input-button" onclick="document.getElementById('invoiceFile').click()">
+                                    <i class="fas fa-folder-open"></i> 浏览
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 文件预览 -->
+                        <div class="file-preview" id="pricePreview">
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>价格表:</strong> <span id="priceListFileName"></span></p>
+                            <p><i class="fas fa-file-excel preview-icon"></i> <strong>对账单:</strong> <span id="invoiceFileName"></span></p>
+                        </div>
+
+                        <button type="button" onclick="processPrice()">
+                            <i class="fas fa-cogs"></i> 开始处理
+                        </button>
+                    </form>
+
+                    <div id="priceResult" class="result"></div>
+                </div>
+            </div>
+
+            <!-- 历史记录标签页 -->
+            <div id="historyTab" class="tabcontent">
+                <h2><i class="fas fa-history"></i> 操作历史记录</h2>
+                <p>查看最近15天内的操作记录和下载结果</p>
+
+                <!-- 筛选条件 -->
+                <div class="history-filter">
+                    <div class="filter-group">
+                        <label for="functionCodeFilter">功能类型:</label>
+                        <select id="functionCodeFilter" class="filter-select">
+                            <option value="all">全部功能</option>
+                            <!-- 动态加载选项 -->
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="dateFilter">时间范围:</label>
+                        <select id="dateFilter" class="filter-select">
+                            <option value="all">全部时间</option>
+                            <option value="today">今天</option>
+                            <option value="3days">最近3天</option>
+                            <option value="6days">最近6天</option>
+                            <option value="15days">最近15天</option>
+                        </select>
+                    </div>
+
+                    <button class="filter-btn" onclick="loadHistory()">
+                        <i class="fas fa-filter"></i> 筛选
+                    </button>
+                </div>
+
+                <!-- 历史记录表格 -->
+                <div class="history-table-container">
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>操作名称</th>
+                                <th>执行时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <!-- 动态加载数据 -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 分页控件 -->
+                <div class="pagination" id="historyPagination">
+                    <button class="pagination-btn" id="prevPage" disabled>
+                        <i class="fas fa-chevron-left"></i> 上一页
+                    </button>
+                    <span class="page-info" id="pageInfo">第 1 页</span>
+                    <button class="pagination-btn" id="nextPage">
+                        下一页 <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- 文件下载模态框 -->
+                <div class="modal" id="downloadModal">
+                    <div class="modal-content">
+                        <span class="close-modal" onclick="closeDownloadModal()">&times;</span>
+                        <h3>选择下载文件</h3>
+                        <div class="file-list" id="downloadFileList">
+                            <!-- 动态加载文件列表 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentHistoryPage = 1;
+        const historyPerPage = 10;
+        let currentHistoryTaskId = null;
+        let currentUser = null;
+        let currentWeiwaiTaskId = null;
+        let currentPurchaseTaskId = null;
+        let weiwaiBatchFiles = [];
+        let purchaseBatchFiles = [];
+        let currentWeiwaiBatchIndex = 0;
+        let currentPurchaseBatchIndex = 0;
+        let weiwaiBatchProcessing = false;
+        let purchaseBatchProcessing = false;
+
+        // 页面加载时检查登录状态
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+            initFilePreviews();
+            initLoginForm();
+        });
+
+        // 初始化登录表单
+        function initLoginForm() {
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    handleLogin();
+                });
+            }
+        }
+
+        // 检查登录状态
+        function checkLoginStatus() {
+            fetch('/api/user/info')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        // 未登录，显示登录页面
+                        showLoginPage();
+                        return;
+                    }
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        currentUser = data.data;
+                        showMainApp();
+                    } else {
+                        showLoginPage();
+                    }
+                })
+                .catch(error => {
+                    console.log('用户未登录:', error);
+                    showLoginPage();
+                });
+        }
+
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginPage').style.display = 'block';
+            document.getElementById('mainContainer').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'none';
+        }
+
+        // 显示主应用
+        function showMainApp() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('mainContainer').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'block';
+            document.getElementById('logoutBtn').style.display = 'block';
+
+            // 更新用户信息
+            document.getElementById('currentUserName').textContent = currentUser.display_name;
+            document.getElementById('currentUserRole').textContent =
+                currentUser.role === 'admin' ? '系统管理员' :
+                currentUser.role === 'operator' ? '操作员' : '普通用户';
+        }
+
+        // 处理登录
+        function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const messageDiv = document.getElementById('loginMessage');
+
+            // 清除之前的信息
+            messageDiv.innerHTML = '';
+            messageDiv.className = '';
+
+            // 基本验证
+            if (!username || !password) {
+                showLoginMessage('请输入用户名和密码', 'error');
+                return;
+            }
+
+            // 禁用提交按钮
+            const submitBtn = document.querySelector('.login-submit-btn');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+            submitBtn.disabled = true;
+
+            // 发送登录请求
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: new URLSearchParams({
+                    'username': username,
+                    'password': password,
+                    'remember_me': rememberMe ? 'on' : 'off'
+                })
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('登录请求失败');
+                }
+            })
+            .then(data => {
+                if (data && data.success) {
+                    showLoginMessage('登录成功！正在跳转...', 'success');
+
+                    // 登录成功，显示主应用
+                    setTimeout(() => {
+                        currentUser = data.user;
+                        showMainApp();
+                    }, 1000);
+                } else {
+                    throw new Error(data?.error || '登录失败');
+                }
+            })
+            .catch(error => {
+                console.error('登录失败:', error);
+                showLoginMessage(error.message || '登录失败，请重试', 'error');
+            })
+            .finally(() => {
+                // 恢复提交按钮
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        // 显示登录信息
+        function showLoginMessage(message, type) {
+            const messageDiv = document.getElementById('loginMessage');
+            messageDiv.textContent = message;
+            messageDiv.className = type === 'error' ? 'login-error' : 'login-success';
+        }
+
+        // 退出登录
+        function logout() {
+            if (confirm('确定要退出登录吗？')) {
+                fetch('/logout')
+                    .then(() => {
+                        window.location.reload();
+                    })
+                    .catch(error => {
+                        console.error('退出登录失败:', error);
+                        window.location.reload();
+                    });
+            }
+        }
+
+        // 打开主标签页
+        function openTab(tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+
+            const tablinks = document.getElementsByClassName("tablink");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+
+            document.getElementById(tabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+
+            // 如果是历史记录标签页，初始化数据
+            if (tabName === 'historyTab') {
+                initHistoryPage();
+            }
+        }
+
+        // 打开子标签页
+        function openSubTab(subTabName) {
+            const subTabcontent = document.getElementsByClassName("sub-tabcontent");
+            for (let i = 0; i < subTabcontent.length; i++) {
+                subTabcontent[i].classList.remove("active");
+            }
+
+            const subTablinks = document.getElementsByClassName("sub-tablink");
+            for (let i = 0; i < subTablinks.length; i++) {
+                subTablinks[i].classList.remove("active");
+            }
+
+            document.getElementById(subTabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // 显示加载状态
+        function showLoading(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="loading">${message}</div>`;
+            element.style.display = 'block';
+        }
+
+        // 显示成功结果
+        function showSuccess(elementId, message, data) {
+            const element = document.getElementById(elementId);
+            let html = `<div class="success">${message}</div>`;
+            element.innerHTML = html;
+        }
+
+        // 显示错误信息
+        function showError(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="error">${message}</div>`;
+            element.style.display = 'block';
+        }
+
+        // 初始化文件预览功能
+        function initFilePreviews() {
+            // 委外OCR文件预览
+            const weiwaiFiles = document.getElementById('weiwaiFiles');
+            if (weiwaiFiles) {
+                weiwaiFiles.addEventListener('change', function() {
+                    updateFilePreview('weiwai', this.files);
+                });
+            }
+
+            // 采购OCR文件预览
+            const purchaseFiles = document.getElementById('purchaseFiles');
+            if (purchaseFiles) {
+                purchaseFiles.addEventListener('change', function() {
+                    updateFilePreview('purchase', this.files);
+                });
+            }
+
+            // 其他文件预览初始化...
+        }
+
+        // 更新文件预览（多文件）
+        function updateFilePreview(prefix, files) {
+            const fileCount = document.getElementById(prefix + 'FileCount');
+            const fileList = document.getElementById(prefix + 'FileList');
+            const preview = document.getElementById(prefix + 'Preview');
+
+            if (fileCount && fileList && preview) {
+                fileCount.textContent = files.length;
+                let fileListHTML = '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    fileListHTML += `<p><i class="fas fa-file-pdf preview-icon"></i> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</p>`;
+                }
+
+                fileList.innerHTML = fileListHTML;
+                preview.style.display = 'block';
+            }
+        }
+
+        // 处理委外OCR
+        function processWeiwai() {
+            const fileInput = document.getElementById('weiwaiFiles');
+            const resultDiv = document.getElementById('weiwaiResult');
+            const processBtn = document.getElementById('weiwaiProcessBtn');
+            const cancelBtn = document.getElementById('weiwaiCancelBtn');
+
+            if (!fileInput || !fileInput.files.length) {
+                showError('weiwaiResult', '请选择PDF文件');
+                return;
+            }
+
+            // 检查登录状态
+            if (!currentUser) {
+                showError('weiwaiResult', '请先登录');
+                return;
+            }
+
+            showLoading('weiwaiResult', '开始处理委外OCR...');
+
+            // 显示处理进度区域
+            document.getElementById('weiwaiProcessProgress').style.display = 'block';
+            document.getElementById('weiwaiBatchProgress').style.display = 'block';
+            showWeiwaiProcessProgress(0, '准备处理文件...');
+
+            // 隐藏处理按钮，显示取消按钮
+            processBtn.style.display = 'none';
+            cancelBtn.style.display = 'block';
+
+            // 保存文件列表
+            weiwaiBatchFiles = Array.from(fileInput.files);
+            currentWeiwaiBatchIndex = 0;
+            weiwaiBatchProcessing = true;
+
+            // 更新批量处理信息
+            document.getElementById('weiwaiTotalFiles').textContent = weiwaiBatchFiles.length;
+            document.getElementById('weiwaiCurrentFileNumber').textContent = '0';
+
+            // 创建文件列表
+            let fileListHTML = '';
+            for (let i = 0; i < weiwaiBatchFiles.length; i++) {
+                const file = weiwaiBatchFiles[i];
+                fileListHTML += `
+                    <div class="batch-file-item">
+                        <div class="batch-file-status" id="weiwaiFileStatus${i}"></div>
+                        <div class="batch-file-name">${file.name}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('weiwaiBatchFileList').innerHTML = fileListHTML;
+
+            // 创建FormData对象并添加文件
+            const formData = new FormData();
+            for (let i = 0; i < weiwaiBatchFiles.length; i++) {
+                formData.append('pdf_file', weiwaiBatchFiles[i]);
+            }
+
+            // 发送请求到后端
+            fetch('/process_pdf_weiwai', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    showLoginPage();
+                    throw new Error('未登录');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    currentWeiwaiTaskId = data.task_id;
+                    showSuccess('weiwaiResult', '委外OCR处理已开始，请稍候...');
+                    // 开始轮询进度
+                    checkWeiwaiBatchProgress();
+                } else {
+                    showError('weiwaiResult', data?.error || '处理失败');
+                    resetWeiwaiBatchUI();
+                }
+            })
+            .catch(error => {
+                console.error('委外OCR处理失败:', error);
+                if (error.message === '未登录') {
+                    showError('weiwaiResult', '请先登录');
+                } else {
+                    showError('weiwaiResult', '处理失败，请重试');
+                }
+                resetWeiwaiBatchUI();
+            });
+        }
+
+        // 检查委外OCR处理进度
+        function checkWeiwaiBatchProgress() {
+            if (!currentWeiwaiTaskId) return;
+
+            fetch(`/progress/${currentWeiwaiTaskId}`)
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        throw new Error('未登录');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        if (data.error) {
+                            showError('weiwaiResult', data.error);
+                            resetWeiwaiBatchUI();
+                            return;
+                        }
+
+                        // 更新总进度
+                        const progress = data.progress || 0;
+                        document.getElementById('weiwaiBatchProgressBar').style.width = `${progress}%`;
+                        document.getElementById('weiwaiProcessProgressBar').style.width = `${progress}%`;
+                        document.getElementById('weiwaiProcessProgressText').textContent = `${Math.round(progress)}%`;
+
+                        // 更新消息
+                        if (data.message) {
+                            document.getElementById('weiwaiProcessProgressMessage').textContent = data.message;
+                        }
+
+                        // 更新当前处理文件
+                        if (data.current_file) {
+                            document.getElementById('weiwaiCurrentFileName').textContent = data.current_file;
+                            document.getElementById('weiwaiCurrentFileNumber').textContent = data.processed_files || 0;
+                        }
+
+                        // 更新文件状态
+                        if (data.results && data.results.length > 0) {
+                            for (let i = 0; i < data.results.length; i++) {
+                                const result = data.results[i];
+                                const statusEl = document.getElementById(`weiwaiFileStatus${i}`);
+                                if (statusEl) {
+                                    statusEl.className = 'batch-file-status';
+                                    if (result.success) {
+                                        statusEl.classList.add('completed');
+                                    } else {
+                                        statusEl.classList.add('failed');
+                                    }
+                                }
+                            }
+                        }
+
+                        // 检查任务状态
+                        if (data.status === 'completed') {
+                            // 处理完成
+                            showWeiwaiBatchResults(data);
+                            resetWeiwaiBatchUI();
+                        } else if (data.status === 'processing') {
+                            // 继续轮询
+                            setTimeout(checkWeiwaiBatchProgress, 2000);
+                        } else if (data.status === 'cancelled') {
+                            showError('weiwaiResult', '处理已取消');
+                            resetWeiwaiBatchUI();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取进度失败:', error);
+                    if (error.message === '未登录') {
+                        showError('weiwaiResult', '请先登录');
+                        resetWeiwaiBatchUI();
+                    } else {
+                        setTimeout(checkWeiwaiBatchProgress, 2000);
+                    }
+                });
+        }
+
+        // 显示委外OCR批量处理结果
+        function showWeiwaiBatchResults(data) {
+            const resultDiv = document.getElementById('weiwaiResult');
+            const successCount = data.results.filter(r => r.success).length;
+            const totalFiles = data.total_files;
+
+            let resultHTML = `
+                <div class="success">
+                    委外OCR处理完成! 成功: ${successCount}/${totalFiles}
+                    <br>
+            `;
+
+            // 添加下载链接
+            if (data.download_links && data.download_links.length > 0) {
+                resultHTML += `<div style="margin-top: 15px; text-align: center;">`;
+                data.download_links.forEach(link => {
+                    resultHTML += `<a href="${link.url}" class="download-btn" target="_blank">下载 ${link.filename}</a>`;
+                });
+                resultHTML += `</div>`;
+            }
+
+            resultHTML += `
+                <button class="download-btn" onclick="location.reload()" style="margin-top: 20px;">
+                    <i class="fas fa-redo"></i> 继续处理
+                </button>
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHTML;
+        }
+
+        // 重置委外OCR批量处理UI
+        function resetWeiwaiBatchUI() {
+            document.getElementById('weiwaiProcessBtn').style.display = 'block';
+            document.getElementById('weiwaiCancelBtn').style.display = 'none';
+            weiwaiBatchProcessing = false;
+            currentWeiwaiTaskId = null;
+        }
+
+        // 取消委外OCR批量处理
+        function cancelWeiwaiProcessing() {
+            if (currentWeiwaiTaskId && weiwaiBatchProcessing) {
+                fetch(`/cancel_task/${currentWeiwaiTaskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        throw new Error('未登录');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        showError('weiwaiResult', '处理已取消');
+                    } else {
+                        showError('weiwaiResult', data?.error || '取消失败');
+                    }
+                    resetWeiwaiBatchUI();
+                })
+                .catch(error => {
+                    console.error('取消任务失败:', error);
+                    if (error.message === '未登录') {
+                        showError('weiwaiResult', '请先登录');
+                    } else {
+                        showError('weiwaiResult', '取消请求失败');
+                    }
+                    resetWeiwaiBatchUI();
+                });
+            }
+        }
+
+        // 显示委外OCR处理进度
+        function showWeiwaiProcessProgress(progress, message) {
+            const progressBar = document.getElementById('weiwaiProcessProgressBar');
+            const progressText = document.getElementById('weiwaiProcessProgressText');
+            const progressMessage = document.getElementById('weiwaiProcessProgressMessage');
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            progressMessage.textContent = message;
+        }
+
+        // 处理采购OCR
+        function processPurchase() {
+            const fileInput = document.getElementById('purchaseFiles');
+            const resultDiv = document.getElementById('purchaseResult');
+            const processBtn = document.getElementById('purchaseProcessBtn');
+            const cancelBtn = document.getElementById('purchaseCancelBtn');
+
+            if (!fileInput || !fileInput.files.length) {
+                showError('purchaseResult', '请选择PDF文件');
+                return;
+            }
+
+            // 检查登录状态
+            if (!currentUser) {
+                showError('purchaseResult', '请先登录');
+                return;
+            }
+
+            showLoading('purchaseResult', '开始处理采购OCR...');
+
+            // 显示处理进度区域
+            document.getElementById('purchaseProcessProgress').style.display = 'block';
+            document.getElementById('purchaseBatchProgress').style.display = 'block';
+            showPurchaseProcessProgress(0, '准备处理文件...');
+
+            // 隐藏处理按钮，显示取消按钮
+            processBtn.style.display = 'none';
+            cancelBtn.style.display = 'block';
+
+            // 保存文件列表
+            purchaseBatchFiles = Array.from(fileInput.files);
+            currentPurchaseBatchIndex = 0;
+            purchaseBatchProcessing = true;
+
+            // 更新批量处理信息
+            document.getElementById('purchaseTotalFiles').textContent = purchaseBatchFiles.length;
+            document.getElementById('purchaseCurrentFileNumber').textContent = '0';
+
+            // 创建文件列表
+            let fileListHTML = '';
+            for (let i = 0; i < purchaseBatchFiles.length; i++) {
+                const file = purchaseBatchFiles[i];
+                fileListHTML += `
+                    <div class="batch-file-item">
+                        <div class="batch-file-status" id="purchaseFileStatus${i}"></div>
+                        <div class="batch-file-name">${file.name}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('purchaseBatchFileList').innerHTML = fileListHTML;
+
+            // 创建FormData对象并添加文件
+            const formData = new FormData();
+            for (let i = 0; i < purchaseBatchFiles.length; i++) {
+                formData.append('pdf_file', purchaseBatchFiles[i]);
+            }
+
+            // 发送请求到后端
+            fetch('/process_pdf_purchase', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    showLoginPage();
+                    throw new Error('未登录');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data && data.success) {
+                    currentPurchaseTaskId = data.task_id;
+                    showSuccess('purchaseResult', '采购OCR处理已开始，请稍候...');
+                    // 开始轮询进度
+                    checkPurchaseBatchProgress();
+                } else {
+                    showError('purchaseResult', data?.error || '处理失败');
+                    resetPurchaseBatchUI();
+                }
+            })
+            .catch(error => {
+                console.error('采购OCR处理失败:', error);
+                if (error.message === '未登录') {
+                    showError('purchaseResult', '请先登录');
+                } else {
+                    showError('purchaseResult', '处理失败，请重试');
+                }
+                resetPurchaseBatchUI();
+            });
+        }
+
+        // 检查采购OCR处理进度
+        function checkPurchaseBatchProgress() {
+            if (!currentPurchaseTaskId) return;
+
+            fetch(`/progress/${currentPurchaseTaskId}`)
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        throw new Error('未登录');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        if (data.error) {
+                            showError('purchaseResult', data.error);
+                            resetPurchaseBatchUI();
+                            return;
+                        }
+
+                        // 更新总进度
+                        const progress = data.progress || 0;
+                        document.getElementById('purchaseBatchProgressBar').style.width = `${progress}%`;
+                        document.getElementById('purchaseProcessProgressBar').style.width = `${progress}%`;
+                        document.getElementById('purchaseProcessProgressText').textContent = `${Math.round(progress)}%`;
+
+                        // 更新消息
+                        if (data.message) {
+                            document.getElementById('purchaseProcessProgressMessage').textContent = data.message;
+                        }
+
+                        // 更新当前处理文件
+                        if (data.current_file) {
+                            document.getElementById('purchaseCurrentFileName').textContent = data.current_file;
+                            document.getElementById('purchaseCurrentFileNumber').textContent = data.processed_files || 0;
+                        }
+
+                        // 更新文件状态
+                        if (data.results && data.results.length > 0) {
+                            for (let i = 0; i < data.results.length; i++) {
+                                const result = data.results[i];
+                                const statusEl = document.getElementById(`purchaseFileStatus${i}`);
+                                if (statusEl) {
+                                    statusEl.className = 'batch-file-status';
+                                    if (result.success) {
+                                        statusEl.classList.add('completed');
+                                    } else if (result.status === 'processing') {
+                                        statusEl.classList.add('processing');
+                                    } else {
+                                        statusEl.classList.add('failed');
+                                    }
+                                }
+                            }
+                        }
+
+                        // 检查任务状态
+                        if (data.status === 'completed') {
+                            // 处理完成
+                            showPurchaseBatchResults(data);
+                            resetPurchaseBatchUI();
+                        } else if (data.status === 'processing') {
+                            // 继续轮询
+                            setTimeout(checkPurchaseBatchProgress, 2000);
+                        } else if (data.status === 'cancelled') {
+                            showError('purchaseResult', '处理已取消');
+                            resetPurchaseBatchUI();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取进度失败:', error);
+                    if (error.message === '未登录') {
+                        showError('purchaseResult', '请先登录');
+                        resetPurchaseBatchUI();
+                    } else {
+                        setTimeout(checkPurchaseBatchProgress, 2000);
+                    }
+                });
+        }
+
+        // 显示采购OCR批量处理结果
+        function showPurchaseBatchResults(data) {
+            const resultDiv = document.getElementById('purchaseResult');
+            const successCount = data.results.filter(r => r.success).length;
+            const totalFiles = data.total_files;
+
+            let resultHTML = `
+                <div class="success">
+                    采购OCR处理完成! 成功: ${successCount}/${totalFiles}
+                    <br>
+            `;
+
+            // 添加下载链接
+            if (data.download_links && data.download_links.length > 0) {
+                resultHTML += `<div style="margin-top: 15px; text-align: center;">`;
+                data.download_links.forEach(link => {
+                    resultHTML += `<a href="${link.url}" class="download-btn" target="_blank">下载 ${link.filename}</a>`;
+                });
+                resultHTML += `</div>`;
+            }
+
+            resultHTML += `
+                <button class="download-btn" onclick="location.reload()" style="margin-top: 20px;">
+                    <i class="fas fa-redo"></i> 继续处理
+                </button>
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHTML;
+        }
+
+        // 重置采购OCR批量处理UI
+        function resetPurchaseBatchUI() {
+            document.getElementById('purchaseProcessBtn').style.display = 'block';
+            document.getElementById('purchaseCancelBtn').style.display = 'none';
+            purchaseBatchProcessing = false;
+            currentPurchaseTaskId = null;
+        }
+
+        // 取消采购OCR批量处理
+        function cancelPurchaseProcessing() {
+            if (currentPurchaseTaskId && purchaseBatchProcessing) {
+                fetch(`/cancel_task/${currentPurchaseTaskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                })
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        throw new Error('未登录');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        showError('purchaseResult', '处理已取消');
+                    } else {
+                        showError('purchaseResult', data?.error || '取消失败');
+                    }
+                    resetPurchaseBatchUI();
+                })
+                .catch(error => {
+                    console.error('取消任务失败:', error);
+                    if (error.message === '未登录') {
+                        showError('purchaseResult', '请先登录');
+                    } else {
+                        showError('purchaseResult', '取消请求失败');
+                    }
+                    resetPurchaseBatchUI();
+                });
+            }
+        }
+
+        // 显示采购OCR处理进度
+        function showPurchaseProcessProgress(progress, message) {
+            const progressBar = document.getElementById('purchaseProcessProgressBar');
+            const progressText = document.getElementById('purchaseProcessProgressText');
+            const progressMessage = document.getElementById('purchaseProcessProgressMessage');
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            progressMessage.textContent = message;
+        }
+
+        // 委外对账功能
+        function reconcileWeiwai() {
+            const receiptInput = document.getElementById('weiwaiReceiptFile');
+            const totalInput = document.getElementById('weiwaiTotalFile');
+            const resultDiv = document.getElementById('weiwaiReconcileResult');
+
+            if (!receiptInput.files.length || !totalInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择委外收据表和委外总表</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const receiptFile = receiptInput.files[0];
+            const totalFile = totalInput.files[0];
+            const formData = new FormData();
+
+            formData.append('weiwai_receipt_file', receiptFile);
+            formData.append('weiwai_total_file', totalFile);
+
+            resultDiv.innerHTML = '<div class="loading">委外对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/reconcile_weiwai', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 适配不同的后端返回字段名
+                    const downloadUrl = data.download_url || data.downloadUrl;
+                    const logUrl = data.log_url || data.logUrl;
+
+                    let html = `
+                        <div class="success">
+                            委外对账完成
+                            <br>
+                            <a href="${downloadUrl}" class="download-btn">下载结果文件</a>
+                    `;
+
+                    // 如果有日志文件，添加日志下载按钮
+                    if (logUrl) {
+                        html += `<a href="${logUrl}" class="download-btn">下载日志文件</a>`;
+                    }
+
+                    html += `
+                        <button class="download-btn" onclick="resetForm('weiwaiReconcileResult')" style="margin-left: 10px;">
+                            <i class="fas fa-redo"></i> 继续处理
+                        </button>
+                        </div>
+                    `;
+
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">${data.error || '委外对账失败'}</div>
+                        <button class="download-btn" onclick="resetForm('weiwaiReconcileResult')" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> 重新尝试
+                        </button>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('委外对账失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">委外对账失败，请重试: ${error.message}</div>
+                    <button class="download-btn" onclick="resetForm('weiwaiReconcileResult')" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> 重新尝试
+                    </button>
+                `;
+            });
+        }
+
+        // 委外收据对账功能
+        function reconcileWeiwaiReceipt() {
+            const receiptInput = document.getElementById('weiwaiReceiptInputFile');
+            const deliveryInput = document.getElementById('weiwaiDeliveryFile');
+            const resultDiv = document.getElementById('weiwaiReceiptResult');
+
+            if (!receiptInput.files.length || !deliveryInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择委外入库单和委外送货单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('weiwai_receipt_input_file', receiptInput.files[0]);
+            formData.append('weiwai_delivery_file', deliveryInput.files[0]);
+
+            resultDiv.innerHTML = '<div class="loading">委外收据对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/reconcile_weiwai_receipt', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 适配不同的后端返回字段名
+                    const downloadUrl = data.download_url || data.downloadUrl;
+                    const logUrl = data.log_url || data.logUrl;
+
+                    let html = `
+                        <div class="success">
+                            委外收据对账完成
+                            <br>
+                            <a href="${downloadUrl}" class="download-btn">下载结果文件</a>
+                    `;
+
+                    // 如果有日志文件，添加日志下载按钮
+                    if (logUrl) {
+                        html += `<a href="${logUrl}" class="download-btn">下载日志文件</a>`;
+                    }
+
+                    html += `
+                        <button class="download-btn" onclick="resetForm('weiwaiReceiptResult')" style="margin-left: 10px;">
+                            <i class="fas fa-redo"></i> 继续处理
+                        </button>
+                        </div>
+                    `;
+
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">${data.error || '委外收据对账失败'}</div>
+                        <button class="download-btn" onclick="resetForm('weiwaiReceiptResult')" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> 重新尝试
+                        </button>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('委外收据对账失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">对账失败，请重试: ${error.message}</div>
+                    <button class="download-btn" onclick="resetForm('weiwaiReceiptResult')" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> 重新尝试
+                    </button>
+                `;
+            });
+        }
+
+        // 采购对账功能
+        function reconcilePurchase() {
+            const receiptInput = document.getElementById('purchaseReceiptFile');
+            const statementInput = document.getElementById('purchaseStatementFile');
+            const resultDiv = document.getElementById('purchaseReconcileResult');
+
+            if (!receiptInput.files.length || !statementInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择采购收据单和采购对账单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('purchase_receipt_file', receiptInput.files[0]);
+            formData.append('purchase_statement_file', statementInput.files[0]);
+
+            resultDiv.innerHTML = '<div class="loading">采购对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/reconcile_purchase', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 适配不同的后端返回字段名
+                    const downloadUrl = data.download_url || data.downloadUrl;
+                    const logUrl = data.log_url || data.logUrl;
+
+                    let html = `
+                        <div class="success">
+                            采购对账完成
+                            <br>
+                            <a href="${downloadUrl}" class="download-btn">下载结果文件</a>
+                    `;
+
+                    // 如果有日志文件，添加日志下载按钮
+                    if (logUrl) {
+                        html += `<a href="${logUrl}" class="download-btn">下载日志文件</a>`;
+                    }
+
+                    html += `
+                        <button class="download-btn" onclick="resetForm('purchaseReconcileResult')" style="margin-left: 10px;">
+                            <i class="fas fa-redo"></i> 继续处理
+                        </button>
+                        </div>
+                    `;
+
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">${data.error || '采购对账失败'}</div>
+                        <button class="download-btn" onclick="resetForm('purchaseReconcileResult')" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> 重新尝试
+                        </button>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('采购对账失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">采购对账失败，请重试: ${error.message}</div>
+                    <button class="download-btn" onclick="resetForm('purchaseReconcileResult')" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> 重新尝试
+                    </button>
+                `;
+            });
+        }
+
+        // 采购收据对账功能
+        function reconcilePurchaseReceipt() {
+            const deliveryInput = document.getElementById('purchaseDeliveryFile');
+            const inventoryInput = document.getElementById('purchaseInventoryFile');
+            const resultDiv = document.getElementById('purchaseReceiptResult');
+
+            if (!deliveryInput.files.length || !inventoryInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择采购单和入库单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const deliveryFile = deliveryInput.files[0];
+            const inventoryFile = inventoryInput.files[0];
+            const formData = new FormData();
+
+            formData.append('delivery_file', deliveryFile);
+            formData.append('inventory_file', inventoryFile);
+
+            resultDiv.innerHTML = '<div class="loading">采购收据对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/reconcile_purchase_receipts', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 适配不同的后端返回字段名
+                    const downloadUrl = data.download_url || data.downloadUrl;
+                    const logUrl = data.log_url || data.logUrl;
+
+                    let html = `
+                        <div class="success">
+                            采购收据对账完成
+                            <br>
+                            <a href="${downloadUrl}" class="download-btn">下载结果文件</a>
+                    `;
+
+                    // 如果有日志文件，添加日志下载按钮
+                    if (logUrl) {
+                        html += `<a href="${logUrl}" class="download-btn">下载日志文件</a>`;
+                    }
+
+                    html += `
+                        <button class="download-btn" onclick="resetForm('purchaseReceiptResult')" style="margin-left: 10px;">
+                            <i class="fas fa-redo"></i> 继续处理
+                        </button>
+                        </div>
+                    `;
+
+                    resultDiv.innerHTML = html;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">${data.error || '采购收据对账失败'}</div>
+                        <button class="download-btn" onclick="resetForm('purchaseReceiptResult')" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> 重新尝试
+                        </button>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('采购收据对账失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">对账失败，请重试: ${error.message}</div>
+                    <button class="download-btn" onclick="resetForm('purchaseReceiptResult')" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> 重新尝试
+                    </button>
+                `;
+            });
+        }
+
+        // 数量取负功能
+        function processNegative() {
+            const negativeInput = document.getElementById('negativeFile');
+            const resultDiv = document.getElementById('negativeResult');
+
+            if (!negativeInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择Excel文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('negative_file', negativeInput.files[0]);
+
+            resultDiv.innerHTML = '<div class="loading">处理中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/negative_excel', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 适配不同的后端返回字段名
+                    const downloadUrl = data.download_url || data.downloadUrl;
+
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            处理成功
+                            <br>
+                            <a href="${downloadUrl}" class="download-btn">下载结果文件</a>
+                            <button class="download-btn" onclick="resetForm('negativeResult')" style="margin-left: 10px;">
+                                <i class="fas fa-redo"></i> 继续处理
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">${data.error || '处理失败'}</div>
+                        <button class="download-btn" onclick="resetForm('negativeResult')" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> 重新尝试
+                        </button>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('数量取负处理失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">处理失败，请重试: ${error.message}</div>
+                    <button class="download-btn" onclick="resetForm('negativeResult')" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> 重新尝试
+                    </button>
+                `;
+            });
+        }
+
+        // 单价处理功能
+        function processPrice() {
+            const priceListInput = document.getElementById('priceListFile');
+            const invoiceInput = document.getElementById('invoiceFile');
+            const resultDiv = document.getElementById('priceResult');
+
+            if (!priceListInput.files.length || !invoiceInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择价格表和对账单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const priceListFile = priceListInput.files[0];
+            const invoiceFile = invoiceInput.files[0];
+            const formData = new FormData();
+
+            formData.append('price_list_file', priceListFile);
+            formData.append('invoice_file', invoiceFile);
+
+            resultDiv.innerHTML = '<div class="loading">单价处理中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/process_invoice_pricing', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 适配不同的后端返回字段名
+                    const downloadUrl = data.download_url || data.downloadUrl;
+
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            单价处理完成
+                            <br>
+                            <a href="${downloadUrl}" class="download-btn">下载结果文件</a>
+                            <button class="download-btn" onclick="resetForm('priceResult')" style="margin-left: 10px;">
+                                <i class="fas fa-redo"></i> 继续处理
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="error">${data.error || '单价处理失败'}</div>
+                        <button class="download-btn" onclick="resetForm('priceResult')" style="margin-top: 10px;">
+                            <i class="fas fa-redo"></i> 重新尝试
+                        </button>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('单价处理失败:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">处理失败，请重试: ${error.message}</div>
+                    <button class="download-btn" onclick="resetForm('priceResult')" style="margin-top: 10px;">
+                        <i class="fas fa-redo"></i> 重新尝试
+                    </button>
+                `;
+            });
+        }
+        // 获取CSRF令牌
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return '';
+        }
+
+        // 初始化历史记录页面
+        function initHistoryPage() {
+            loadFunctionCodeOptions();
+            loadHistory();
+
+            // 点击模态框外部关闭
+            window.onclick = function(event) {
+                const modal = document.getElementById('downloadModal');
+                if (event.target === modal) {
+                    closeDownloadModal();
+                }
+            };
+        }
+
+        // 加载功能代码选项
+        function loadFunctionCodeOptions() {
+            fetch('/api/history/function_codes')
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        const select = document.getElementById('functionCodeFilter');
+                        // 清空现有选项（保留"全部功能"选项）
+                        while (select.options.length > 1) {
+                            select.remove(1);
+                        }
+
+                        data.data.forEach(item => {
+                            const option = document.createElement('option');
+                            option.value = item.code;
+                            option.textContent = item.name;
+                            select.appendChild(option);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('加载功能代码失败:', error);
+                });
+        }
+
+        // 加载历史记录
+        function loadHistory(page = 1) {
+            // 检查登录状态
+            if (!currentUser) {
+                showLoginPage();
+                return;
+            }
+
+            currentHistoryPage = page;
+            const functionCode = document.getElementById('functionCodeFilter').value;
+            const dateFilter = document.getElementById('dateFilter').value;
+
+            fetch(`/api/history?page=${page}&per_page=${historyPerPage}&function_code=${functionCode}&date_filter=${dateFilter}`)
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success) {
+                        renderHistoryTable(data.data);
+                        updatePaginationControls(data.pagination);
+                    } else if (data) {
+                        console.error('加载历史记录失败:', data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('加载历史记录请求失败:', error);
+                });
+        }
+
+        // 渲染历史记录表格
+        function renderHistoryTable(historyList) {
+            const tbody = document.getElementById('historyTableBody');
+            tbody.innerHTML = '';
+
+            if (historyList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="no-data">没有找到匹配的记录</td></tr>';
+                return;
+            }
+
+            historyList.forEach((item, index) => {
+                const row = document.createElement('tr');
+                if (item.is_expired) {
+                    row.classList.add('expired');
+                }
+
+                row.innerHTML = `
+                    <td>${(currentHistoryPage - 1) * historyPerPage + index + 1}</td>
+                    <td>${item.operation_name}</td>
+                    <td>${item.created_at}</td>
+                    <td>
+                        <button class="download-action" onclick="showDownloadOptions('${item.task_id}')"
+                            ${item.is_expired ? 'disabled title="记录已过期"' : ''}>
+                            <i class="fas fa-download"></i> 下载
+                        </button>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // 更新分页控件
+        function updatePaginationControls(pagination) {
+            const pageInfo = document.getElementById('pageInfo');
+            const prevBtn = document.getElementById('prevPage');
+            const nextBtn = document.getElementById('nextPage');
+
+            pageInfo.textContent = `第 ${pagination.current_page} 页 / 共 ${pagination.pages} 页`;
+            prevBtn.disabled = !pagination.has_prev;
+            nextBtn.disabled = !pagination.has_next;
+
+            // 更新分页按钮事件
+            prevBtn.onclick = () => loadHistory(pagination.current_page - 1);
+            nextBtn.onclick = () => loadHistory(pagination.current_page + 1);
+        }
+
+        // 显示下载选项模态框
+        function showDownloadOptions(taskId) {
+            // 检查登录状态
+            if (!currentUser) {
+                showLoginPage();
+                return;
+            }
+
+            const modal = document.getElementById('downloadModal');
+            const fileList = document.getElementById('downloadFileList');
+
+            // 获取文件列表
+            fetch(`/api/history?task_id=${taskId}`)
+                .then(response => {
+                    if (response.status === 401) {
+                        showLoginPage();
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.success && data.data.length > 0) {
+                        const historyItem = data.data[0];
+                        let fileHtml = '';
+
+                        historyItem.files.forEach(file => {
+                            fileHtml += `
+                                <div class="file-item">
+                                    <span class="file-name">${file.name}</span>
+                                    <a href="/download/${file.path}" class="download-file-btn" download>
+                                        <i class="fas fa-download"></i> 下载
+                                    </a>
+                                </div>
+                            `;
+                        });
+
+                        fileList.innerHTML = fileHtml;
+                        modal.style.display = 'block';
+                        currentHistoryTaskId = taskId;
+                    }
+                })
+                .catch(error => {
+                    console.error('获取下载选项失败:', error);
+                });
+        }
+
+        // 关闭下载模态框
+        function closeDownloadModal() {
+            document.getElementById('downloadModal').style.display = 'none';
+            currentHistoryTaskId = null;
+        }
+
+        // 在页面加载时初始化
+        window.addEventListener('DOMContentLoaded', function() {
+            // 默认打开第一个标签页
+            document.querySelector('.tablink.active').click();
+
+            // 初始化文件预览
+            initFilePreviews();
+        });
+
+        // 键盘事件处理
+        document.addEventListener('keydown', function(event) {
+            // ESC键关闭模态框
+            if (event.key === 'Escape') {
+                closeDownloadModal();
+            }
+        });
+
+        // 页面卸载前提示
+        window.addEventListener('beforeunload', function(event) {
+            if (currentWeiwaiTaskId || currentPurchaseTaskId) {
+                event.preventDefault();
+                event.returnValue = '您有任务正在处理中，确定要离开吗？';
+                return '您有任务正在处理中，确定要离开吗？';
+            }
+        });
+    </script>
+</body>
+</html>

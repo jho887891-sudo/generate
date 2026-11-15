@@ -1,0 +1,1993 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务对账系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 15px 0 30px;
+            color: #2c3e50;
+            font-size: 2.4rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tablink {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 0;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tablink::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            transition: height 0.3s ease;
+            z-index: -1;
+        }
+
+        .tablink:hover {
+            color: white;
+        }
+
+        .tablink:hover::before {
+            height: 100%;
+        }
+
+        .tablink.active {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabcontent.active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.6rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        p {
+            margin-bottom: 25px;
+            color: #5a6268;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .file-upload {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            border: 2px dashed #e0e7ff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-upload:hover {
+            border-color: #3498db;
+            background-color: #f0f8ff;
+            transform: translateY(-3px);
+            box-shadow: 0  15px rgba(0, 0, 0, 0.05);
+        }
+
+        .file-upload label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .file-upload label::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+
+        .file-input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-input:hover {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .file-input-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        button:hover::after {
+            left: 120%;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .loading {
+            background: linear-gradient(90deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.1rem;
+            animation: pulse 1.5s infinite;
+            border: 1px solid #bbdefb;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .success {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: #2e7d32;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.1);
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+            text-decoration: none;
+        }
+
+        .download-btn:hover::after {
+            left: 120%;
+        }
+
+        .download-btn + .download-btn {
+            background: linear-gradient(to right, #17a2b8, #138496);
+        }
+
+        .download-btn + .download-btn:hover {
+            background: linear-gradient(to right, #138496, #117a8b);
+        }
+
+        /* 进度指示器 */
+        .progress-container {
+            width: 100%;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 5px;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: #5a6268;
+            font-weight: 500;
+        }
+
+        .progress-message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .upload-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .upload-speed {
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .file-size {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* 文件预览 */
+        .file-preview {
+            margin-top: 15px;
+            padding: 12px;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .file-preview p {
+            margin: 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .file-preview strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .preview-icon {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        /* 操作指引 */
+        .instructions {
+            background-color: #f0f8ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* 子标签页 */
+        .sub-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sub-tablink {
+            padding: 12px 20px;
+            background: #e0e7ff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.3s ease;
+        }
+
+        .sub-tablink:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .sub-tablink.active {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .sub-tabcontent {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sub-tabcontent.active {
+            display: block;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                max-width: 95%;
+            }
+
+            h1 {
+                font-size: 2rem;
+                padding-bottom: 10px;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tablink {
+                border-radius: 8px;
+                margin-bottom: 5px;
+            }
+
+            .tabcontent {
+                padding: 20px;
+            }
+
+            .download-btn {
+                display: block;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .sub-tabs {
+                flex-direction: column;
+            }
+
+            .sub-tablink {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                background: #f4f4f4;
+            }
+
+            .container {
+                padding: 20px 15px;
+                border-radius: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .file-upload {
+                padding: 12px;
+            }
+
+            input[type="file"] {
+                padding: 10px;
+                font-size: 0.95rem;
+            }
+
+            button {
+                padding: 14px;
+                font-size: 1rem;
+            }
+
+            .download-btn {
+                padding: 12px;
+                font-size: 1rem;
+                min-width: auto;
+            }
+
+            .result {
+                min-height: 100px;
+            }
+
+            .loading, .success, .error {
+                padding: 20px;
+            }
+        }
+
+        /* 图标样式 */
+        .icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #2c3e50;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        /* 新增样式：批量处理进度 */
+        .batch-progress {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            display: none;
+        }
+
+        .batch-progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .batch-progress-text {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .batch-progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .batch-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .batch-file-list {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .batch-file-item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .batch-file-status {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 10px;
+            background-color: #e0e0e0;
+        }
+
+        .batch-file-status.completed {
+            background-color: #2ecc71;
+        }
+
+        .batch-file-status.processing {
+            background-color: #3498db;
+            animation: pulse 1s infinite;
+        }
+
+        .batch-file-status.failed {
+            background-color: #e74c3c;
+        }
+
+        .batch-file-name {
+            flex: 1;
+        }
+
+        .cancel-btn {
+            background: linear-gradient(to right, #e74c3c, #c0392b);
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .cancel-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(231, 76, 60, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>财务对账系统</h1>
+
+        <div class="tabs">
+            <button class="tablink active" onclick="openTab('tab1')">
+                <i class="fas fa-file-pdf"></i> PDF转Excel
+            </button>
+            <button class="tablink" onclick="openTab('tab2')">
+                <i class="fas fa-file-excel"></i> 对账功能
+            </button>
+            <button class="tablink" onclick="openTab('tab3')">
+                <i class="fas fa-calculator"></i> 数量取负
+            </button>
+        </div>
+
+        <div id="tab1" class="tabcontent active">
+            <h2><i class="fas fa-file-pdf"></i> PDF转Excel工具</h2>
+            <p>选择功能并上传PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>支持PDF格式文件（可多选）</li>
+                    <li>文件大小不超过50MB</li>
+                    <li>处理时间取决于文件大小</li>
+                    <li>处理完成后可下载Excel文件</li>
+                </ul>
+            </div>
+
+            <!-- 子标签页 -->
+            <div class="sub-tabs">
+                <button class="sub-tablink active" onclick="openSubTab('weiwaiTab')">
+                    <i class="fas fa-file-contract"></i> 委外单OCR识别
+                </button>
+                <button class="sub-tablink" onclick="openSubTab('caigouTab')">
+                    <i class="fas fa-shopping-cart"></i> 采购单OCR识别
+                </button>
+            </div>
+
+            <!-- 委外单OCR识别子标签页 -->
+            <div id="weiwaiTab" class="sub-tabcontent active">
+                <h3><i class="fas fa-file-contract"></i> 委外单OCR识别</h3>
+                <p>上传委外单PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>支持PDF格式文件（可多选）</li>
+                        <li>文件大小不超过50MB</li>
+                        <li>处理时间取决于文件大小</li>
+                        <li>处理完成后可下载Excel文件</li>
+                    </ul>
+                </div>
+
+                <form id="pdfForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="pdfFile">选择PDF文件:</label>
+                        <div class="file-input-container">
+                            <!-- 添加multiple属性以支持多文件选择 -->
+                            <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" required class="file-input" multiple>
+                            <div class="file-input-button" onclick="document.getElementById('pdfFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="pdfPreview">
+                        <p><i class="fas fa-file-pdf preview-icon"></i> <strong>已选择文件:</strong> <span id="pdfFileCount">0</span> 个</p>
+                        <div id="pdfFileList"></div>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="pdfUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="pdfUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="pdfUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="pdfUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="pdfFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <!-- 处理进度条容器 -->
+                    <div class="progress-container" id="pdfProcessProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="pdfProcessProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="pdfProcessProgressText">0%</div>
+                        <div class="progress-message" id="pdfProcessProgressMessage">等待开始处理...</div>
+                    </div>
+
+                    <!-- 批量处理进度 -->
+                    <div class="batch-progress" id="batchProgress" style="display: none;">
+                        <div class="batch-progress-header">
+                            <div class="batch-progress-text">
+                                正在处理: <span id="currentFileNumber">0</span> / <span id="totalFiles">0</span>
+                            </div>
+                            <div id="currentFileName"></div>
+                        </div>
+                        <div class="batch-progress-bar">
+                            <div class="batch-progress-fill" id="batchProgressBar"></div>
+                        </div>
+                        <div class="batch-file-list" id="batchFileList"></div>
+                    </div>
+
+                    <button type="button" onclick="processWeiwaiPdf()" id="processBtn">
+                        <i class="fas fa-cogs"></i> 开始处理
+                    </button>
+
+                    <button class="cancel-btn" onclick="cancelBatchProcessing()" id="cancelBtn" style="display: none;">
+                        <i class="fas fa-times-circle"></i> 取消处理
+                    </button>
+                </form>
+
+                <div id="pdfResult" class="result"></div>
+            </div>
+
+            <!-- 采购单OCR识别子标签页 -->
+            <div id="caigouTab" class="sub-tabcontent">
+                <h3><i class="fas fa-shopping-cart"></i> 采购单OCR识别</h3>
+                <p>上传采购单PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>支持PDF格式文件（可多选）</li>
+                        <li>文件大小不超过50MB</li>
+                        <li>处理时间取决于文件大小</li>
+                        <li>处理完成后可下载Excel文件</li>
+                    </ul>
+                </div>
+
+                <form id="purchasePdfForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="purchasePdfFile">选择PDF文件:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="purchasePdfFile" name="purchase_pdf_file" accept=".pdf" required class="file-input" multiple>
+                            <div class="file-input-button" onclick="document.getElementById('purchasePdfFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="purchasePdfPreview">
+                        <p><i class="fas fa-file-pdf preview-icon"></i> <strong>已选择文件:</strong> <span id="purchasePdfFileCount">0</span> 个</p>
+                        <div id="purchasePdfFileList"></div>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="purchasePdfUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="purchasePdfUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="purchasePdfUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="purchasePdfUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="purchasePdfFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <!-- 处理进度条容器 -->
+                    <div class="progress-container" id="purchasePdfProcessProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="purchasePdfProcessProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="purchasePdfProcessProgressText">0%</div>
+                        <div class="progress-message" id="purchasePdfProcessProgressMessage">等待开始处理...</div>
+                    </div>
+
+                    <!-- 批量处理进度 -->
+                    <div class="batch-progress" id="purchaseBatchProgress" style="display: none;">
+                        <div class="batch-progress-header">
+                            <div class="batch-progress-text">
+                                正在处理: <span id="purchaseCurrentFileNumber">0</span> / <span id="purchaseTotalFiles">0</span>
+                            </div>
+                            <div id="purchaseCurrentFileName"></div>
+                        </div>
+                        <div class="batch-progress-bar">
+                            <div class="batch-progress-fill" id="purchaseBatchProgressBar"></div>
+                        </div>
+                        <div class="batch-file-list" id="purchaseBatchFileList"></div>
+                    </div>
+
+                    <button type="button" onclick="processPurchasePdf()" id="purchaseProcessBtn">
+                        <i class="fas fa-cogs"></i> 开始处理
+                    </button>
+
+                    <button class="cancel-btn" onclick="cancelPurchaseBatchProcessing()" id="purchaseCancelBtn" style="display: none;">
+                        <i class="fas fa-times-circle"></i> 取消处理
+                    </button>
+                </form>
+
+                <div id="purchasePdfResult" class="result"></div>
+            </div>
+        </div>
+
+        <div id="tab2" class="tabcontent">
+            <h2><i class="fas fa-file-excel"></i> 对账功能</h2>
+            <p>选择对账类型并上传相应文件进行对账处理</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>选择对账类型：Excel对账、送货单对账或采购对账</li>
+                    <li>根据提示上传相应的文件</li>
+                    <li>系统将自动进行对账处理</li>
+                    <li>处理完成后可下载结果文件</li>
+                </ul>
+            </div>
+
+            <!-- 子标签页 -->
+            <div class="sub-tabs">
+                <button class="sub-tablink active" onclick="openSubTab('excelTab')">
+                    <i class="fas fa-file-excel"></i> Excel对账
+                </button>
+                <button class="sub-tablink" onclick="openSubTab('deliveryTab')">
+                    <i class="fas fa-truck"></i> 送货单对账
+                </button>
+                <button class="sub-tablink" onclick="openSubTab('purchaseTab')">
+                    <i class="fas fa-shopping-cart"></i> 采购对账
+                </button>
+            </div>
+
+            <!-- Excel对账子标签页 -->
+            <div id="excelTab" class="sub-tabcontent active">
+                <h3><i class="fas fa-file-excel"></i> Excel对账</h3>
+                <p>上传收据表和总表，系统将自动进行对账处理</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>需要上传两个Excel文件：收据表和总表</li>
+                        <li>文件格式支持.xlsx和.xls</li>
+                        <li>系统将生成对账结果和日志文件</li>
+                        <li>处理完成后可下载结果文件</li>
+                    </ul>
+                </div>
+
+                <form id="excelForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="receiptFile">选择收据表:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="receiptFile" name="receipt_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('receiptFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-upload">
+                        <label for="totalFile">选择总表:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="totalFile" name="total_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('totalFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="excelPreview">
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>收据表:</strong> <span id="receiptFileName"></span></p>
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>总表:</strong> <span id="totalFileName"></span></p>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="excelUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="excelUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="excelUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="excelUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="excelFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="reconcileExcel()">
+                        <i class="fas fa-cogs"></i> 开始对账
+                    </button>
+                </form>
+
+                <div id="excelResult" class="result"></div>
+            </div>
+
+            <!-- 送货单对账子标签页 -->
+            <div id="deliveryTab" class="sub-tabcontent">
+                <h3><i class="fas fa-truck"></i> 送货单对账</h3>
+                <p>上传入库单和送货单，系统将自动进行对账处理</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>需要上传两个Excel文件：入库单和送货单</li>
+                        <li>文件格式支持.xlsx和.xls</li>
+                        <li>系统将生成对账结果和日志文件</li>
+                        <li>处理完成后可下载结果文件</li>
+                    </ul>
+                </div>
+
+                <form id="deliveryForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="deliveryReceiptFile">选择入库单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="deliveryReceiptFile" name="delivery_receipt_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('deliveryReceiptFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-upload">
+                        <label for="deliveryTotalFile">选择送货单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="deliveryTotalFile" name="delivery_total_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('deliveryTotalFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="deliveryPreview">
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>入库单:</strong> <span id="deliveryReceiptFileName"></span></p>
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>送货单:</strong> <span id="deliveryTotalFileName"></span></p>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="deliveryUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="deliveryUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="deliveryUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="deliveryUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="deliveryFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="reconcileDelivery()">
+                        <i class="fas fa-cogs"></i> 开始对账
+                    </button>
+                </form>
+
+                <div id="deliveryResult" class="result"></div>
+            </div>
+
+            <!-- 采购对账子标签页 -->
+            <div id="purchaseTab" class="sub-tabcontent">
+                <h3><i class="fas fa-shopping-cart"></i> 采购对账</h3>
+                <p>上传采购收据单和采购对账单，系统将自动进行对账处理</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>需要上传两个Excel文件：采购收据单和采购对账单</li>
+                        <li>文件格式支持.xlsx和.xls</li>
+                        <li>系统将生成对账结果和日志文件</li>
+                        <li>处理完成后可下载结果文件</li>
+                    </ul>
+                </div>
+
+                <form id="purchaseForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="purchaseReceiptFile">选择采购收据单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="purchaseReceiptFile" name="purchase_receipt_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('purchaseReceiptFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-upload">
+                        <label for="purchaseStatementFile">选择采购对账单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="purchaseStatementFile" name="purchase_statement_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('purchaseStatementFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="purchasePreview">
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购收据单:</strong> <span id="purchaseReceiptFileName"></span></p>
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购对账单:</strong> <span id="purchaseStatementFileName"></span></p>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="purchaseUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="purchaseUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="purchaseUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="purchaseUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="purchaseFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="reconcilePurchase()">
+                        <i class="fas fa-cogs"></i> 开始对账
+                    </button>
+                </form>
+
+                <div id="purchaseResult" class="result"></div>
+            </div>
+        </div>
+
+        <div id="tab3" class="tabcontent">
+            <h2><i class="fas fa-calculator"></i> Excel数量取负工具</h2>
+            <p>上传Excel文件，系统将自动将"数量"列的值取负（乘以-1）</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>仅支持Excel格式文件（.xlsx, .xls）</li>
+                    <li>文件必须包含"数量"列</li>
+                    <li>处理完成后可下载修改后的文件</li>
+                    <li>原始文件不会被修改</li>
+                </ul>
+            </div>
+
+            <form id="negativeForm" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="negativeFile">选择Excel文件:</label>
+                    <div class="file-input-container">
+                        <input type="file" id="negativeFile" name="negative_file" accept=".xlsx,.xls" required class="file-input">
+                        <div class="file-input-button" onclick="document.getElementById('negativeFile').click()">
+                            <i class="fas fa-folder-open"></i> 浏览
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件预览 -->
+                <div class="file-preview" id="negativePreview">
+                    <p><i class="fas fa-file-excel preview-icon"></i> <strong>文件名:</strong> <span id="negativeFileName"></span></p>
+                    <p><strong>文件大小:</strong> <span id="negativeFileSizePreview"></span></p>
+                </div>
+
+                <!-- 上传进度条容器 -->
+                <div class="progress-container" id="negativeUploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="negativeUploadProgressBar"></div>
+                    </div>
+                    <div class="progress-text" id="negativeUploadProgressText">0%</div>
+                    <div class="upload-info">
+                        <span class="upload-speed" id="negativeUploadSpeed">0 KB/s</span>
+                        <span class="file-size" id="negativeFileSize">0 MB</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="processNegative()">
+                    <i class="fas fa-cogs"></i> 开始处理
+                </button>
+            </form>
+
+            <div id="negativeResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentPage = 1;
+        let totalPages = 1;
+        let pageSize = 10;
+        let currentTaskId = null; // 当前任务ID
+        let batchProcessing = false; // 是否正在批量处理
+        let batchFiles = []; // 批量处理文件列表
+        let currentBatchIndex = 0; // 当前处理文件索引
+        let batchInterval = null; // 批量处理计时器
+
+        // 添加CSRF令牌处理
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return '';
+        }
+
+        function openTab(tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        function openSubTab(subTabName) {
+            var i, subTabcontent, subTablinks;
+            subTabcontent = document.getElementsByClassName("sub-tabcontent");
+            for (i = 0; i < subTabcontent.length; i++) {
+                subTabcontent[i].classList.remove("active");
+            }
+            subTablinks = document.getElementsByClassName("sub-tablink");
+            for (i = 0; i < subTablinks.length; i++) {
+                subTablinks[i].classList.remove("active");
+            }
+            document.getElementById(subTabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // 初始化文件预览
+        function initFilePreviews() {
+            // PDF文件预览
+            document.getElementById('pdfFile').addEventListener('change', function() {
+                const files = this.files;
+                document.getElementById('pdfFileCount').textContent = files.length;
+                let fileListHTML = '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    fileListHTML += `<p><i class="fas fa-file-pdf"></i> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</p>`;
+                }
+
+                document.getElementById('pdfFileList').innerHTML = fileListHTML;
+                document.getElementById('pdfPreview').style.display = 'block';
+            });
+
+            // 采购单PDF文件预览
+            document.getElementById('purchasePdfFile').addEventListener('change', function() {
+                const files = this.files;
+                document.getElementById('purchasePdfFileCount').textContent = files.length;
+                let fileListHTML = '';
+
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    fileListHTML += `<p><i class="fas fa-file-pdf"></i> ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)</p>`;
+                }
+
+                document.getElementById('purchasePdfFileList').innerHTML = fileListHTML;
+                document.getElementById('purchasePdfPreview').style.display = 'block';
+            });
+
+            // Excel对账文件预览
+            document.getElementById('receiptFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('receiptFileName').textContent = file.name;
+                    document.getElementById('excelPreview').style.display = 'block';
+                }
+            });
+
+            document.getElementById('totalFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('totalFileName').textContent = file.name;
+                    document.getElementById('excelPreview').style.display = 'block';
+                }
+            });
+
+            // 送货单对账文件预览
+            document.getElementById('deliveryReceiptFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('deliveryReceiptFileName').textContent = file.name;
+                    document.getElementById('deliveryPreview').style.display = 'block';
+                }
+            });
+
+            document.getElementById('deliveryTotalFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('deliveryTotalFileName').textContent = file.name;
+                    document.getElementById('deliveryPreview').style.display = 'block';
+                }
+            });
+
+            // 采购对账文件预览
+            document.getElementById('purchaseReceiptFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('purchaseReceiptFileName').textContent = file.name;
+                    document.getElementById('purchasePreview').style.display = 'block';
+                }
+            });
+
+            document.getElementById('purchaseStatementFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('purchaseStatementFileName').textContent = file.name;
+                    document.getElementById('purchasePreview').style.display = 'block';
+                }
+            });
+
+            // 数量取负文件预览
+            document.getElementById('negativeFile').addEventListener('change', function() {
+                const file = this.files[0];
+                if (file) {
+                    document.getElementById('negativeFileName').textContent = file.name;
+                    document.getElementById('negativeFileSizePreview').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                    document.getElementById('negativePreview').style.display = 'block';
+                }
+            });
+        }
+
+        // 处理委外单PDF文件（支持批量）
+        function processWeiwaiPdf() {
+            const fileInput = document.getElementById('pdfFile');
+            const resultDiv = document.getElementById('pdfResult');
+            const processBtn = document.getElementById('processBtn');
+            const cancelBtn = document.getElementById('cancelBtn');
+            const batchProgress = document.getElementById('batchProgress');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择PDF文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            // 显示处理进度区域
+            document.getElementById('pdfProcessProgress').style.display = 'block';
+            document.getElementById('batchProgress').style.display = 'block';
+            showProcessProgress(0, '准备处理文件...');
+
+            // 隐藏处理按钮，显示取消按钮
+            processBtn.style.display = 'none';
+            cancelBtn.style.display = 'block';
+
+            // 保存文件列表
+            batchFiles = Array.from(fileInput.files);
+            currentBatchIndex = 0;
+            batchProcessing = true;
+
+            // 更新批量处理信息
+            document.getElementById('totalFiles').textContent = batchFiles.length;
+            document.getElementById('currentFileNumber').textContent = '0';
+
+            // 创建文件列表
+            let fileListHTML = '';
+            for (let i = 0; i < batchFiles.length; i++) {
+                const file = batchFiles[i];
+                fileListHTML += `
+                    <div class="batch-file-item">
+                        <div class="batch-file-status" id="fileStatus${i}"></div>
+                        <div class="batch-file-name">${file.name}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('batchFileList').innerHTML = fileListHTML;
+
+            // 创建FormData对象并添加文件
+            const formData = new FormData();
+            for (let i = 0; i < batchFiles.length; i++) {
+                formData.append('pdf_file', batchFiles[i]);
+            }
+
+            // 发送请求到后端
+            fetch('/process_weiwai_pdf', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentTaskId = data.task_id;
+                    // 开始轮询任务进度
+                    checkBatchProgress();
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error || '任务创建失败'}</div>`;
+                    resetBatchUI();
+                }
+            })
+            .catch(error => {
+                console.error('批量处理请求失败:', error);
+                resultDiv.innerHTML = '<div class="error">请求失败，请重试</div>';
+                resetBatchUI();
+            });
+        }
+
+        // 处理采购单PDF文件（支持批量）
+        function processPurchasePdf() {
+            const fileInput = document.getElementById('purchasePdfFile');
+            const resultDiv = document.getElementById('purchasePdfResult');
+            const processBtn = document.getElementById('purchaseProcessBtn');
+            const cancelBtn = document.getElementById('purchaseCancelBtn');
+            const batchProgress = document.getElementById('purchaseBatchProgress');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择PDF文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            // 显示处理进度区域
+            document.getElementById('purchasePdfProcessProgress').style.display = 'block';
+            document.getElementById('purchaseBatchProgress').style.display = 'block';
+            showPurchaseProcessProgress(0, '准备处理文件...');
+
+            // 隐藏处理按钮，显示取消按钮
+            processBtn.style.display = 'none';
+            cancelBtn.style.display = 'block';
+
+            // 保存文件列表
+            batchFiles = Array.from(fileInput.files);
+            currentBatchIndex = 0;
+            batchProcessing = true;
+
+            // 更新批量处理信息
+            document.getElementById('purchaseTotalFiles').textContent = batchFiles.length;
+            document.getElementById('purchaseCurrentFileNumber').textContent = '0';
+
+            // 创建文件列表
+            let fileListHTML = '';
+            for (let i = 0; i < batchFiles.length; i++) {
+                const file = batchFiles[i];
+                fileListHTML += `
+                    <div class="batch-file-item">
+                        <div class="batch-file-status" id="purchaseFileStatus${i}"></div>
+                        <div class="batch-file-name">${file.name}</div>
+                    </div>
+                `;
+            }
+            document.getElementById('purchaseBatchFileList').innerHTML = fileListHTML;
+
+            // 创建FormData对象并添加文件
+            const formData = new FormData();
+            for (let i = 0; i < batchFiles.length; i++) {
+                formData.append('purchase_pdf_file', batchFiles[i]);
+            }
+
+            // 发送请求到后端
+            fetch('/process_purchase_ocr', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentTaskId = data.task_id;
+                    // 开始轮询任务进度
+                    checkPurchaseBatchProgress();
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error || '任务创建失败'}</div>`;
+                    resetPurchaseBatchUI();
+                }
+            })
+            .catch(error => {
+                console.error('批量处理请求失败:', error);
+                resultDiv.innerHTML = '<div class="error">请求失败，请重试</div>';
+                resetPurchaseBatchUI();
+            });
+        }
+
+        // 检查委外单批量处理进度
+        function checkBatchProgress() {
+            if (!currentTaskId) return;
+
+            fetch(`/progress/${currentTaskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('pdfResult').innerHTML = `<div class="error">${data.error}</div>`;
+                    resetBatchUI();
+                    return;
+                }
+
+                // 更新总进度
+                const progress = data.progress || 0;
+                document.getElementById('batchProgressBar').style.width = `${progress}%`;
+                document.getElementById('pdfProcessProgressBar').style.width = `${progress}%`;
+                document.getElementById('pdfProcessProgressText').textContent = `${Math.round(progress)}%`;
+
+                // 更新消息
+                if (data.message) {
+                    document.getElementById('pdfProcessProgressMessage').textContent = data.message;
+                }
+
+                // 更新当前处理文件
+                if (data.current_file) {
+                    document.getElementById('currentFileName').textContent = data.current_file;
+                    document.getElementById('currentFileNumber').textContent = data.processed_files || 0;
+                }
+
+                // 更新文件状态
+                if (data.results && data.results.length > 0) {
+                    for (let i = 0; i < data.results.length; i++) {
+                        const result = data.results[i];
+                        const statusEl = document.getElementById(`fileStatus${i}`);
+                        if (statusEl) {
+                            statusEl.className = 'batch-file-status';
+                            if (result.success) {
+                                statusEl.classList.add('completed');
+                            } else {
+                                statusEl.classList.add('failed');
+                            }
+                        }
+                    }
+                }
+
+                // 检查任务状态
+                if (data.status === 'completed') {
+                    // 处理完成
+                    showBatchResults(data);
+                    resetBatchUI();
+                } else if (data.status === 'processing') {
+                    // 继续轮询
+                    setTimeout(checkBatchProgress, 2000);
+                } else if (data.status === 'cancelled') {
+                    document.getElementById('pdfResult').innerHTML = '<div class="error">处理已取消</div>';
+                    resetBatchUI();
+                }
+            })
+            .catch(error => {
+                console.error('获取进度失败:', error);
+                setTimeout(checkBatchProgress, 2000);
+            });
+        }
+
+        // 检查采购单批量处理进度
+        function checkPurchaseBatchProgress() {
+            if (!currentTaskId) return;
+
+            fetch(`/progress/${currentTaskId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('purchasePdfResult').innerHTML = `<div class="error">${data.error}</div>`;
+                    resetPurchaseBatchUI();
+                    return;
+                }
+
+                // 更新总进度
+                const progress = data.progress || 0;
+                document.getElementById('purchaseBatchProgressBar').style.width = `${progress}%`;
+                document.getElementById('purchasePdfProcessProgressBar').style.width = `${progress}%`;
+                document.getElementById('purchasePdfProcessProgressText').textContent = `${Math.round(progress)}%`;
+
+                // 更新消息
+                if (data.message) {
+                    document.getElementById('purchasePdfProcessProgressMessage').textContent = data.message;
+                }
+
+                // 更新当前处理文件
+                if (data.current_file) {
+                    document.getElementById('purchaseCurrentFileName').textContent = data.current_file;
+                    document.getElementById('purchaseCurrentFileNumber').textContent = data.processed_files || 0;
+                }
+
+                // 更新文件状态
+                if (data.results && data.results.length > 0) {
+                    for (let i = 0; i < data.results.length; i++) {
+                        const result = data.results[i];
+                        const statusEl = document.getElementById(`purchaseFileStatus${i}`);
+                        if (statusEl) {
+                            statusEl.className = 'batch-file-status';
+                            if (result.success) {
+                                statusEl.classList.add('completed');
+                            } else {
+                                statusEl.classList.add('failed');
+                            }
+                        }
+                    }
+                }
+
+                // 检查任务状态
+                if (data.status === 'completed') {
+                    // 处理完成
+                    showPurchaseBatchResults(data);
+                    resetPurchaseBatchUI();
+                } else if (data.status === 'processing') {
+                    // 继续轮询
+                    setTimeout(checkPurchaseBatchProgress, 2000);
+                } else if (data.status === 'cancelled') {
+                    document.getElementById('purchasePdfResult').innerHTML = '<div class="error">处理已取消</div>';
+                    resetPurchaseBatchUI();
+                }
+            })
+            .catch(error => {
+                console.error('获取进度失败:', error);
+                setTimeout(checkPurchaseBatchProgress, 2000);
+            });
+        }
+
+        // 显示委外单批量处理结果
+        function showBatchResults(data) {
+            const resultDiv = document.getElementById('pdfResult');
+            const successCount = data.results.filter(r => r.success).length;
+            const totalFiles = data.total_files;
+
+            let resultHTML = `
+                <div class="success">
+                    批量处理完成! 成功: ${successCount}/${totalFiles}
+                    <br>
+            `;
+
+            // 添加下载链接
+            if (data.download_links && data.download_links.length > 0) {
+                resultHTML += `<div style="margin-top: 15px; text-align: center;">`;
+                data.download_links.forEach(link => {
+                    resultHTML += `<a href="${link.url}" class="download-btn">下载 ${link.filename}</a>`;
+                });
+                resultHTML += `</div>`;
+            }
+
+            resultHTML += `
+                <button class="download-btn" onclick="location.reload()" style="margin-top: 20px;">
+                    <i class="fas fa-redo"></i> 继续处理
+                </button>
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHTML;
+        }
+
+        // 显示采购单批量处理结果
+        function showPurchaseBatchResults(data) {
+            const resultDiv = document.getElementById('purchasePdfResult');
+            const successCount = data.results.filter(r => r.success).length;
+            const totalFiles = data.total_files;
+
+            let resultHTML = `
+                <div class="success">
+                    批量处理完成! 成功: ${successCount}/${totalFiles}
+                    <br>
+            `;
+
+            // 添加下载链接
+            if (data.download_links && data.download_links.length > 0) {
+                resultHTML += `<div style="margin-top: 15px; text-align: center;">`;
+                data.download_links.forEach(link => {
+                    resultHTML += `<a href="${link.url}" class="download-btn">下载 ${link.filename}</a>`;
+                });
+                resultHTML += `</div>`;
+            }
+
+            resultHTML += `
+                <button class="download-btn" onclick="location.reload()" style="margin-top: 20px;">
+                    <i class="fas fa-redo"></i> 继续处理
+                </button>
+                </div>
+            `;
+
+            resultDiv.innerHTML = resultHTML;
+        }
+
+        // 重置委外单批量处理UI
+        function resetBatchUI() {
+            document.getElementById('processBtn').style.display = 'block';
+            document.getElementById('cancelBtn').style.display = 'none';
+            batchProcessing = false;
+            currentTaskId = null;
+        }
+
+        // 重置采购单批量处理UI
+        function resetPurchaseBatchUI() {
+            document.getElementById('purchaseProcessBtn').style.display = 'block';
+            document.getElementById('purchaseCancelBtn').style.display = 'none';
+            batchProcessing = false;
+            currentTaskId = null;
+        }
+
+        // 取消委外单批量处理
+        function cancelBatchProcessing() {
+            if (currentTaskId && batchProcessing) {
+                fetch(`/cancel_task/${currentTaskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('pdfResult').innerHTML = '<div class="error">处理已取消</div>';
+                    } else {
+                        document.getElementById('pdfResult').innerHTML = `<div class="error">${data.error || '取消失败'}</div>`;
+                    }
+                    resetBatchUI();
+                })
+                .catch(error => {
+                    console.error('取消任务失败:', error);
+                    document.getElementById('pdfResult').innerHTML = '<div class="error">取消请求失败</div>';
+                    resetBatchUI();
+                });
+            }
+        }
+
+        // 取消采购单批量处理
+        function cancelPurchaseBatchProcessing() {
+            if (currentTaskId && batchProcessing) {
+                fetch(`/cancel_task/${currentTaskId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('purchasePdfResult').innerHTML = '<div class="error">处理已取消</div>';
+                    } else {
+                        document.getElementById('purchasePdfResult').innerHTML = `<div class="error">${data.error || '取消失败'}</div>`;
+                    }
+                    resetPurchaseBatchUI();
+                })
+                .catch(error => {
+                    console.error('取消任务失败:', error);
+                    document.getElementById('purchasePdfResult').innerHTML = '<div class="error">取消请求失败</div>';
+                    resetPurchaseBatchUI();
+                });
+            }
+        }
+
+        // 显示委外单处理进度
+        function showProcessProgress(progress, message) {
+            const progressBar = document.getElementById('pdfProcessProgressBar');
+            const progressText = document.getElementById('pdfProcessProgressText');
+            const progressMessage = document.getElementById('pdfProcessProgressMessage');
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            progressMessage.textContent = message;
+        }
+
+        // 显示采购单处理进度
+        function showPurchaseProcessProgress(progress, message) {
+            const progressBar = document.getElementById('purchasePdfProcessProgressBar');
+            const progressText = document.getElementById('purchasePdfProcessProgressText');
+            const progressMessage = document.getElementById('purchasePdfProcessProgressMessage');
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            progressMessage.textContent = message;
+        }
+
+        // Excel对账功能
+        function reconcileExcel() {
+            const receiptInput = document.getElementById('receiptFile');
+            const totalInput = document.getElementById('totalFile');
+            const resultDiv = document.getElementById('excelResult');
+
+            if (!receiptInput.files.length || !totalInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择收据表和总表</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const receiptFile = receiptInput.files[0];
+            const totalFile = totalInput.files[0];
+            const formData = new FormData();
+
+            formData.append('receipt_file', receiptFile);
+            formData.append('total_file', totalFile);
+
+            fetch('/reconcile_excel', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            对账完成
+                            <br>
+                            <a href="${data.download_url}" class="download-btn">下载结果文件</a>
+                            <a href="${data.log_url}" class="download-btn">下载日志文件</a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error || '对账失败'}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('Excel对账失败:', error);
+                resultDiv.innerHTML = '<div class="error">对账失败，请重试</div>';
+            });
+        }
+
+        // 送货单对账功能
+        function reconcileDelivery() {
+            const receiptInput = document.getElementById('deliveryReceiptFile');
+            const totalInput = document.getElementById('deliveryTotalFile');
+            const resultDiv = document.getElementById('deliveryResult');
+
+            if (!receiptInput.files.length || !totalInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择入库单和送货单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('receipt_file', receiptInput.files[0]);
+            formData.append('total_file', totalInput.files[0]);
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/reconcile_delivery', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            送货单对账完成
+                            <br>
+                            <a href="${data.download_url}" class="download-btn">下载结果文件</a>
+                            <a href="${data.log_url}" class="download-btn">下载日志文件</a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error || '对账失败'}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('送货单对账失败:', error);
+                resultDiv.innerHTML = '<div class="error">对账失败，请重试</div>';
+            });
+        }
+
+        // 采购对账功能
+        function reconcilePurchase() {
+            const receiptInput = document.getElementById('purchaseReceiptFile');
+            const statementInput = document.getElementById('purchaseStatementFile');
+            const resultDiv = document.getElementById('purchaseResult');
+
+            if (!receiptInput.files.length || !statementInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择采购收据单和采购对账单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('purchase_receipt_file', receiptInput.files[0]);
+            formData.append('purchase_statement_file', statementInput.files[0]);
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/reconcile_purchase', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            采购对账完成
+                            <br>
+                            <a href="${data.download_url}" class="download-btn">下载结果文件</a>
+                            <a href="${data.log_url}" class="download-btn">下载日志文件</a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error || '对账失败'}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('采购对账失败:', error);
+                resultDiv.innerHTML = '<div class="error">对账失败，请重试</div>';
+            });
+        }
+
+        // 数量取负功能
+        function processNegative() {
+            const negativeFile = document.getElementById('negativeFile');
+            const resultDiv = document.getElementById('negativeResult');
+
+            if (!negativeFile.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择Excel文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('negative_file', negativeFile.files[0]);
+
+            resultDiv.innerHTML = '<div class="loading">处理中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            fetch('/negative_excel', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            处理成功
+                            <br>
+                            <a href="${data.download_url}" class="download-btn">下载结果文件</a>
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error || '处理失败'}</div>`;
+                }
+            })
+            .catch(error => {
+                console.error('数量取负处理失败:', error);
+                resultDiv.innerHTML = '<div class="error">处理失败，请重试</div>';
+            });
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            // 初始化文件预览
+            initFilePreviews();
+
+            // 设置默认打开的标签页
+            openTab('tab1');
+            openSubTab('weiwaiTab');
+        });
+    </script>
+</body>
+</html>

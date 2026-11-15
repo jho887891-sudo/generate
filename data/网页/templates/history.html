@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史任务记录 - 降价计算系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="back-btn" onclick="window.location.href='/'">
+                <i class="fas fa-arrow-left"></i> 返回首页
+            </button>
+            <h1><i class="fas fa-history"></i> 历史任务记录</h1>
+        </header>
+
+        <div class="content">
+            <div class="section">
+                <div class="section-title">
+                    <i class="fas fa-tasks"></i>
+                    <h2>所有计算任务</h2>
+                </div>
+
+                <div id="tasks-container">
+                    <table class="tasks-table">
+                        <thead>
+                            <tr>
+                                <th>任务ID</th>
+                                <th>创建时间</th>
+                                <th>状态</th>
+                                <th>源文件</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tasks-list">
+                            <!-- 任务列表将通过JS动态填充 -->
+                        </tbody>
+                    </table>
+                    <div id="no-tasks" class="no-tasks hidden">
+                        <i class="fas fa-inbox"></i>
+                        <h3>暂无历史任务记录</h3>
+                        <p>您还没有执行过任何计算任务</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetch('/tasks')
+                .then(response => response.json())
+                .then(tasks => {
+                    const tasksList = document.getElementById('tasks-list');
+                    const noTasks = document.getElementById('no-tasks');
+
+                    if (tasks.length === 0) {
+                        noTasks.classList.remove('hidden');
+                        return;
+                    }
+
+                    tasks.forEach(task => {
+                        const row = document.createElement('tr');
+
+                        // 任务ID（缩短显示）
+                        const idCell = document.createElement('td');
+                        idCell.textContent = task.id.substring(0, 8) + '...';
+                        idCell.title = task.id;
+
+                        // 创建时间
+                        const timeCell = document.createElement('td');
+                        timeCell.textContent = task.created_at;
+
+                        // 状态
+                        const statusCell = document.createElement('td');
+                        const statusBadge = document.createElement('span');
+                        statusBadge.className = `status-badge status-${task.status}`;
+                        statusBadge.textContent =
+                            task.status === 'pending' ? '等待中' :
+                            task.status === 'running' ? '进行中' :
+                            task.status === 'completed' ? '已完成' : '错误';
+                        statusCell.appendChild(statusBadge);
+
+                        // 源文件
+                        const filesCell = document.createElement('td');
+                        const filesDiv = document.createElement('div');
+                        filesDiv.className = 'task-files';
+
+                        if (task.raw_filename) {
+                            const rawFile = document.createElement('div');
+                            rawFile.className = 'task-file';
+                            rawFile.innerHTML = `<i class="fas fa-file-excel"></i> ${task.raw_filename}`;
+                            filesDiv.appendChild(rawFile);
+                        }
+
+                        if (task.template_filename) {
+                            const templateFile = document.createElement('div');
+                            templateFile.className = 'task-file';
+                            templateFile.innerHTML = `<i class="fas fa-file-alt"></i> ${task.template_filename}`;
+                            filesDiv.appendChild(templateFile);
+                        }
+
+                        if (task.baseline_filename) {
+                            const baselineFile = document.createElement('div');
+                            baselineFile.className = 'task-file';
+                            baselineFile.innerHTML = `<i class="fas fa-file-contract"></i> ${task.baseline_filename}`;
+                            filesDiv.appendChild(baselineFile);
+                        }
+
+                        filesCell.appendChild(filesDiv);
+
+                        // 操作
+                        const actionCell = document.createElement('td');
+                        const actionDiv = document.createElement('div');
+                        actionDiv.className = 'action-buttons';
+
+                        if (task.status === 'completed') {
+                            const downloadResult = document.createElement('a');
+                            downloadResult.className = 'action-btn';
+                            downloadResult.href = `/download/${task.id}/result`;
+                            downloadResult.innerHTML = '<i class="fas fa-download"></i> 结果';
+
+                            const downloadRaise = document.createElement('a');
+                            downloadRaise.className = 'action-btn';
+                            downloadRaise.href = `/download/${task.id}/raise`;
+                            downloadRaise.innerHTML = '<i class="fas fa-download"></i> 涨价';
+
+                            const downloadDone = document.createElement('a');
+                            downloadDone.className = 'action-btn';
+                            downloadDone.href = `/download/${task.id}/done`;
+                            downloadDone.innerHTML = '<i class="fas fa-download"></i> 原表';
+
+                            actionDiv.appendChild(downloadResult);
+                            actionDiv.appendChild(downloadRaise);
+                            actionDiv.appendChild(downloadDone);
+                        } else {
+                            const statusText = document.createElement('span');
+                            statusText.textContent = task.status === 'error' ? '任务出错' : '任务进行中';
+                            statusText.style.color = '#94a3b8';
+                            actionDiv.appendChild(statusText);
+                        }
+
+                        actionCell.appendChild(actionDiv);
+
+                        // 组装行
+                        row.appendChild(idCell);
+                        row.appendChild(timeCell);
+                        row.appendChild(statusCell);
+                        row.appendChild(filesCell);
+                        row.appendChild(actionCell);
+
+                        tasksList.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('加载任务失败:', error);
+                    document.getElementById('no-tasks').classList.remove('hidden');
+                    document.getElementById('no-tasks').innerHTML = `
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>加载任务失败</h3>
+                        <p>${error.message || '无法连接到服务器'}</p>
+                    `;
+                });
+        });
+    </script>
+</body>
+</html>

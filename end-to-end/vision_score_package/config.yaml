@@ -1,0 +1,40 @@
+project_root: /home/T7/wkq/end-to-end
+vision_train_root: /home/T7/wkq/end-to-end/vision_train
+test_labelme_dir: /home/T7/wkq/end-to-end/vk3
+output_dir: /home/T7/wkq/end-to-end/vision_score_outputs
+
+python_bin: /home/T7/public/miniconda3/envs/finetune1/bin/python
+device: cuda:0
+img_size: 640
+num_classes: 2
+class_name: defect
+
+thresholds:
+  semantic_prob: 0.5
+  mask_rcnn_score: 0.05
+  yolo_conf: 0.05
+  min_area: 1
+
+sahi:
+  models:
+    - yolo_x_best_lr_75
+  model_type: yolov11
+  confidence_threshold: 0.3
+  image_size: 1280
+  slice_height: 640
+  slice_width: 640
+  overlap_height_ratio: 0.3
+  overlap_width_ratio: 0.3
+  dedup_iou_threshold: 0.55
+
+visualization:
+  save_semantic: true
+  alpha: 0.45
+
+weights:
+  unet: /home/T7/wkq/end-to-end/runs/vision_compare/unet/best_unet.pt
+  deeplabv3plus: /home/T7/wkq/end-to-end/runs/vision_compare/deeplabv3plus/best_deeplabv3plus.pt
+  mask_rcnn: /home/T7/wkq/end-to-end/runs/vision_compare/mask_rcnn/best_mask_rcnn.pt
+  yolov8n_seg: /home/T7/wkq/end-to-end/runs/vision_compare/yolov8n_seg/weights/best.pt
+  yolov11n_seg: /home/T7/wkq/end-to-end/runs/vision_compare/yolov11n_seg/weights/best.pt
+  yolo_x_best_lr_75: /home/T7/wkq/end-to-end/yolo-X-data/best_LR_75.pt

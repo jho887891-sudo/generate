@@ -1,0 +1,109 @@
+# Central configuration for the independent vision_compare training package.
+# Edit only this file for normal use.
+
+project_root: /home/T7/wkq/end-to-end/vision_train
+python_bin: /home/T7/public/miniconda3/envs/finetune1/bin/python
+
+# Raw uploaded dataset folder on the server.
+# The folder is expected to contain image files and same-stem LabelMe JSON files.
+raw_dataset_dir: /home/T7/wkq/end-to-end/上传
+
+pretrained_dir: /home/T7/wkq/end-to-end/vison_models
+runs_dir: /home/T7/wkq/end-to-end/runs/vision_compare
+logs_dir: /home/T7/wkq/end-to-end/logs/vision_compare
+work_dir: /home/T7/wkq/end-to-end/vision_data
+
+classes:
+  # Background is always class id 0 for PyTorch semantic/instance models.
+  # LabelMe shapes with any non-background label are mapped to class id 1 by default.
+  - background
+  - defect
+
+label_mapping:
+  # Add aliases here if your LabelMe label names are not exactly "defect".
+  # Example:
+  # gas_hole: defect
+  # pore: defect
+  default_foreground: defect
+
+split:
+  seed: 20260525
+  train_ratio: 0.7
+  val_ratio: 0.2
+  test_ratio: 0.1
+
+image:
+  img_size: 640
+  mask_value_foreground: 1
+  valid_extensions:
+    - .jpg
+    - .jpeg
+    - .png
+    - .bmp
+    - .tif
+    - .tiff
+
+training:
+  epochs: 100
+  num_workers: 8
+  device: cuda:0
+  amp: true
+  resume: false
+  skip_if_best_exists: false
+  save_every_epochs: 1
+  learning_rate: 0.0001
+  weight_decay: 0.0001
+
+data_export:
+  # Parallel workers for converting LabelMe polygons to model-specific formats.
+  # The server has 32 CPU cores; 12 is a conservative default that speeds up
+  # preparation without monopolizing the machine.
+  num_workers: 12
+  progress_interval: 100
+
+models:
+  unet:
+    batch_size: 8
+    lr: 0.0001
+    pretrained_encoder_safetensors: /home/T7/wkq/end-to-end/vison_models/unet/resnet50_imagenet_encoder_model.safetensors
+    pretrained_encoder_config: /home/T7/wkq/end-to-end/vison_models/unet/resnet50_imagenet_encoder_config.json
+    pretrained_resnet50: /home/T7/wkq/end-to-end/vison_models/backbone/resnet50-19c8e357.pth
+    run_subdir: unet
+    best_name: best_unet.pt
+    last_name: last_unet.pt
+
+  deeplabv3plus:
+    batch_size: 4
+    lr: 0.0001
+    pretrained_checkpoint: /home/T7/wkq/end-to-end/vison_models/deeplabv3plus/best_deeplabv3plus_resnet50_voc_os16.pth
+    pretrained_resnet50: /home/T7/wkq/end-to-end/vison_models/deeplabv3plus/resnet50-19c8e357.pth
+    run_subdir: deeplabv3plus
+    best_name: best_deeplabv3plus.pt
+    last_name: last_deeplabv3plus.pt
+
+  mask_rcnn:
+    batch_size: 4
+    lr: 0.00005
+    pretrained_checkpoint: /home/T7/wkq/end-to-end/vison_models/mask_rcnn/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth
+    run_subdir: mask_rcnn
+    best_name: best_mask_rcnn.pt
+    last_name: last_mask_rcnn.pt
+
+  yolov8n_seg:
+    batch_size: 8
+    lr: 0.01
+    weights: /home/T7/wkq/end-to-end/vison_models/yolov8n_seg/yolov8n-seg.pt
+    run_subdir: yolov8n_seg
+
+  yolov11n_seg:
+    batch_size: 8
+    lr: 0.01
+    weights: /home/T7/wkq/end-to-end/vison_models/yolov11n_seg/yolo11n-seg.pt
+    run_subdir: yolov11n_seg
+
+expected_weights:
+  unet: /home/T7/wkq/end-to-end/runs/vision_compare/unet/best_unet.pt
+  deeplabv3plus: /home/T7/wkq/end-to-end/runs/vision_compare/deeplabv3plus/best_deeplabv3plus.pt
+  mask_rcnn: /home/T7/wkq/end-to-end/runs/vision_compare/mask_rcnn/best_mask_rcnn.pt
+  yolov8n_seg: /home/T7/wkq/end-to-end/runs/vision_compare/yolov8n_seg/weights/best.pt
+  yolov11n_seg: /home/T7/wkq/end-to-end/runs/vision_compare/yolov11n_seg/weights/best.pt

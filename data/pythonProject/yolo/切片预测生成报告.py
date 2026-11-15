@@ -1,0 +1,296 @@
+import cv2
+import numpy as np
+import os
+from sahi import AutoDetectionModel
+from sahi.predict import get_prediction, get_sliced_prediction
+from sahi.utils.cv import visualize_object_predictions
+import pandas as pd
+from datetime import datetime
+
+# 校准参数
+CALIBRATION_DATA = {
+    "image_height_pixels": 255,
+    "calibration_length_mm": 45.0,
+    "pixel_size_mm_per_pixel": 0.046778
+}
+
+# 1. 初始化YOLO检测模型
+detection_model = AutoDetectionModel.from_pretrained(
+    model_type='yolov11',
+    model_path='best.pt',
+    confidence_threshold=0.3,
+    device='cuda:0',
+)
+
+
+def calculate_corrosion_area(bbox, pixel_size_mm):
+    """
+    计算腐蚀区域的面积
+
+    参数:
+        bbox: 边界框 [xmin, ymin, xmax, ymax]
+        pixel_size_mm: 每个像素对应的实际尺寸(mm)
+
+    返回:
+        area_mm2: 面积(mm²)
+        width_mm: 宽度(mm)
+        height_mm: 高度(mm)
+    """
+    # 计算像素尺寸
+    width_pixels = bbox[2] - bbox[0]
+    height_pixels = bbox[3] - bbox[1]
+
+    # 转换为实际尺寸
+    width_mm = width_pixels * pixel_size_mm
+    height_mm = height_pixels * pixel_size_mm
+
+    # 计算面积（假设为矩形）
+    area_mm2 = width_mm * height_mm
+
+    return area_mm2, width_mm, height_mm
+
+
+def detect_with_sahi(image_path, output_path):
+    """
+    使用SAHI进行切片推理并计算腐蚀面积
+
+    参数:
+        image_path: 输入图像路径
+        output_path: 结果保存路径
+
+    返回:
+        result: 检测结果
+        area_info: 面积信息列表
+    """
+    # 读取图像
+    image = cv2.imread(image_path)
+    if image is None:
+        print(f"无法读取图像: {image_path}")
+        return None, None
+
+    # 使用SAHI的切片推理
+    result = get_sliced_prediction(
+        image,
+        detection_model,
+        slice_height=512,
+        slice_width=512,
+        overlap_height_ratio=0.3,
+        overlap_width_ratio=0.3,
+        verbose=1
+    )
+
+    # 计算每个检测到的腐蚀点的面积
+    area_info = []
+    for i, pred in enumerate(result.object_prediction_list):
+        bbox = pred.bbox.to_xyxy()
+        area_mm2, width_mm, height_mm = calculate_corrosion_area(
+            bbox, CALIBRATION_DATA["pixel_size_mm_per_pixel"]
+        )
+
+        area_info.append({
+            'id': i + 1,
+            'category': pred.category.name,
+            'confidence': float(pred.score.value),
+            'bbox_pixels': bbox,
+            'width_pixels': bbox[2] - bbox[0],
+            'height_pixels': bbox[3] - bbox[1],
+            'width_mm': width_mm,
+            'height_mm': height_mm,
+            'area_mm2': area_mm2
+        })
+
+    # 在图像上绘制面积信息
+    output_image = image.copy()
+    for info in area_info:
+        xmin, ymin, xmax, ymax = map(int, info['bbox_pixels'])
+
+        # 绘制边界框
+        cv2.rectangle(output_image, (xmin, ymin), (xmax, ymax), (0, 255, 0), 2)
+
+        # 添加面积文本
+        text = f"{info['area_mm2']:.2f}mm²"
+        cv2.putText(output_image, text, (xmin, ymin - 10),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+    # 保存结果图像
+    cv2.imwrite(output_path, output_image)
+    print(f"结果已保存到: {output_path}")
+
+    return result, area_info
+
+
+def create_excel_report(all_reports, output_folder):
+    """
+    创建Excel格式的报告
+
+    参数:
+        all_reports: 所有图片的检测报告
+        output_folder: 输出文件夹路径
+    """
+    # 创建详细数据表格
+    detailed_data = []
+    summary_data = []
+
+    for report in all_reports:
+        image_name = report['image_name']
+        total_points = report['total_corrosion_points']
+        total_area = report['total_area_mm2']
+
+        # 汇总数据
+        summary_data.append({
+            '图片名称': image_name,
+            '腐蚀点数量': total_points,
+            '总面积(mm²)': total_area,
+            '平均面积(mm²)': total_area / total_points if total_points > 0 else 0,
+            '最大面积(mm²)': max([d['area_mm2'] for d in report['corrosion_details']]) if total_points > 0 else 0,
+            '最小面积(mm²)': min([d['area_mm2'] for d in report['corrosion_details']]) if total_points > 0 else 0
+        })
+
+        # 详细数据
+        for detail in report['corrosion_details']:
+            detailed_data.append({
+                '图片名称': image_name,
+                '腐蚀点ID': detail['id'],
+                '类别': detail['category'],
+                '置信度': detail['confidence'],
+                'X_min(像素)': detail['bbox_pixels'][0],
+                'Y_min(像素)': detail['bbox_pixels'][1],
+                'X_max(像素)': detail['bbox_pixels'][2],
+                'Y_max(像素)': detail['bbox_pixels'][3],
+                '宽度(像素)': detail['width_pixels'],
+                '高度(像素)': detail['height_pixels'],
+                '宽度(mm)': detail['width_mm'],
+                '高度(mm)': detail['height_mm'],
+                '面积(mm²)': detail['area_mm2']
+            })
+
+    # 创建Excel文件
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    excel_file = os.path.join(output_folder, f'corrosion_report_{timestamp}.xlsx')
+
+    with pd.ExcelWriter(excel_file, engine='openpyxl') as writer:
+        # 汇总表
+        df_summary = pd.DataFrame(summary_data)
+        df_summary.to_excel(writer, sheet_name='汇总统计', index=False)
+
+        # 详细数据表
+        df_detailed = pd.DataFrame(detailed_data)
+        df_detailed.to_excel(writer, sheet_name='详细数据', index=False)
+
+        # 校准信息表
+        calibration_df = pd.DataFrame([CALIBRATION_DATA])
+        calibration_df.to_excel(writer, sheet_name='校准信息', index=False)
+
+        # 统计信息表
+        stats_data = {
+            '统计项目': ['总图片数', '总腐蚀点数', '平均每图腐蚀点数', '总面积(mm²)', '平均腐蚀点面积(mm²)'],
+            '数值': [
+                len(all_reports),
+                len(detailed_data),
+                len(detailed_data) / len(all_reports) if all_reports else 0,
+                sum([report['total_area_mm2'] for report in all_reports]),
+                sum([report['total_area_mm2'] for report in all_reports]) / len(detailed_data) if detailed_data else 0
+            ]
+        }
+        df_stats = pd.DataFrame(stats_data)
+        df_stats.to_excel(writer, sheet_name='总体统计', index=False)
+
+    # 设置Excel列宽（可选）
+    try:
+        from openpyxl import load_workbook
+        wb = load_workbook(excel_file)
+
+        # 调整列宽
+        for sheet_name in wb.sheetnames:
+            ws = wb[sheet_name]
+            for column in ws.columns:
+                max_length = 0
+                column_letter = column[0].column_letter
+                for cell in column:
+                    try:
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                    except:
+                        pass
+                adjusted_width = min(max_length + 2, 30)
+                ws.column_dimensions[column_letter].width = adjusted_length
+
+        wb.save(excel_file)
+    except ImportError:
+        print("openpyxl未安装，跳过自动调整列宽")
+
+    print(f"Excel报告已保存到: {excel_file}")
+    return excel_file
+
+
+def process_folder(input_folder, output_folder):
+    """
+    处理文件夹中的所有图片并生成Excel报告
+
+    参数:
+        input_folder: 输入图片文件夹路径
+        output_folder: 输出结果文件夹路径
+    """
+    # 确保输出文件夹存在
+    os.makedirs(output_folder, exist_ok=True)
+
+    # 获取文件夹中所有图片文件
+    supported_formats = ('.jpg', '.jpeg', '.png', '.bmp', '.tiff')
+    image_files = [f for f in os.listdir(input_folder)
+                   if f.lower().endswith(supported_formats)]
+
+    if not image_files:
+        print(f"在文件夹 {input_folder} 中没有找到支持的图片文件")
+        return
+
+    all_reports = []
+
+    # 处理每张图片
+    for img_file in image_files:
+        input_path = os.path.join(input_folder, img_file)
+        output_path = os.path.join(output_folder, f"result_{img_file}")
+
+        print(f"\n正在处理: {img_file}")
+        detection_result, area_info = detect_with_sahi(input_path, output_path)
+
+        if detection_result and area_info:
+            # 生成单张图片的报告
+            image_report = {
+                'image_name': img_file,
+                'total_corrosion_points': len(area_info),
+                'total_area_mm2': sum(info['area_mm2'] for info in area_info),
+                'corrosion_details': area_info
+            }
+
+            all_reports.append(image_report)
+
+            # 打印结果
+            print(f"检测到 {len(area_info)} 个腐蚀点")
+            print("腐蚀点详情:")
+            for info in area_info:
+                print(f"  点{info['id']}: {info['area_mm2']:.2f}mm² "
+                      f"(置信度: {info['confidence']:.2f})")
+            print(f"总面积: {image_report['total_area_mm2']:.2f}mm²")
+
+    # 生成Excel报告
+    if all_reports:
+        excel_file = create_excel_report(all_reports, output_folder)
+        print(f"\n完整Excel报告已生成: {excel_file}")
+
+
+# 主程序
+if __name__ == '__main__':
+    # 输入和输出文件夹路径
+    input_folder = 'corrosion'
+    output_folder = 'output'
+
+    # 显示校准信息
+    print("校准参数:")
+    print(f"  图像高度: {CALIBRATION_DATA['image_height_pixels']} 像素")
+    print(f"  标定长度: {CALIBRATION_DATA['calibration_length_mm']} mm")
+    print(f"  像素尺寸: {CALIBRATION_DATA['pixel_size_mm_per_pixel']:.6f} mm/像素")
+    print(f"  换算比例: 1 像素 = {CALIBRATION_DATA['pixel_size_mm_per_pixel']:.6f} mm")
+
+    # 批量处理
+    process_folder(input_folder, output_folder)
+    print("\n所有图片处理完成!")

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务对账系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 2.2rem;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            margin: 10px auto;
+            border-radius: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .tablink {
+            flex: 1;
+            padding: 15px 0;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .tablink.active {
+            color: #3498db;
+        }
+
+        .tablink.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #3498db;
+            border-radius: 3px 3px 0 0;
+        }
+
+        .tablink:hover {
+            color: #3498db;
+            background: rgba(52, 152, 219, 0.05);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+        }
+
+        .tabcontent.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabcontent h2 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .tabcontent p {
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .file-upload {
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .file-upload label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .file-upload input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            background: rgba(52, 152, 219, 0.05);
+            color: #3498db;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload input[type="file"]:hover {
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .loading {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .download-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 12px 25px;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+
+        .progress-text {
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin-top: 5px;
+        }
+
+        .upload-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #7f8c8d;
+        }
+
+        .upload-speed {
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .file-size {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .speed-boost {
+            background: #fff9c4;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .speed-boost .icon {
+            font-size: 1.5rem;
+            margin-right: 5px;
+            color: #f57c00;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .tablink {
+                font-size: 1rem;
+                padding: 12px 0;
+            }
+
+            .tabcontent {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>财务对账系统</h1>
+
+        <div class="tabs">
+            <button class="tablink active" onclick="openTab('tab1')">PDF转Excel</button>
+            <button class="tablink" onclick="openTab('tab2')">Excel对账</button>
+        </div>
+
+        <div id="tab1" class="tabcontent active">
+            <h2>PDF转Excel工具</h2>
+            <p>上传PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+            <div class="speed-boost">
+                <span class="icon">⚡</span>
+                使用分片上传技术，大文件上传速度提升300%
+            </div>
+
+            <form id="pdfForm" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="pdfFile">选择PDF文件:</label>
+                    <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" required>
+                </div>
+
+                <!-- 进度条容器 -->
+                <div class="progress-container" id="pdfProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="pdfProgressBar"></div>
+                    </div>
+                    <div class="progress-text" id="pdfProgressText">0%</div>
+                    <div class="upload-info">
+                        <span class="upload-speed" id="pdfUploadSpeed">0 MB/s</span>
+                        <span class="file-size" id="pdfFileSize">0 MB</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="processPdf()">开始处理</button>
+            </form>
+
+            <div id="pdfResult" class="result"></div>
+        </div>
+
+        <div id="tab2" class="tabcontent">
+            <h2>Excel对账工具</h2>
+            <p>上传收据表和总表，系统将自动进行对账处理</p>
+
+            <div class="speed-boost">
+                <span class="icon">⚡</span>
+                使用并行上传技术，双文件同时上传速度提升200%
+            </div>
+
+            <form id="excelForm" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="receiptFile">选择收据表:</label>
+                    <input type="file" id="receiptFile" name="receipt_file" accept=".xlsx,.xls" required>
+                </div>
+
+                <div class="file-upload">
+                    <label for="totalFile">选择总表:</label>
+                    <input type="file" id="totalFile" name="total_file" accept=".xlsx,.xls" required>
+                </div>
+
+                <!-- 进度条容器 -->
+                <div class="progress-container" id="excelProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="excelProgressBar"></div>
+                    </div>
+                    <div class="progress-text" id="excelProgressText">0%</div>
+                    <div class="upload-info">
+                        <span class="upload-speed" id="excelUploadSpeed">0 MB/s</span>
+                        <span class="file-size" id="excelFileSize">0 MB</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="reconcileExcel()">开始对账</button>
+            </form>
+
+            <div id="excelResult" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // 添加CSRF令牌处理
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return '';
+        }
+
+        // 分片大小（2MB）
+        const CHUNK_SIZE = 2 * 1024 * 1024;
+
+        function openTab(tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // 显示上传进度
+        function showUploadProgress(formId, progress, speed, fileSize) {
+            const progressBar = document.getElementById(`${formId}ProgressBar`);
+            const progressText = document.getElementById(`${formId}ProgressText`);
+            const uploadSpeed = document.getElementById(`${formId}UploadSpeed`);
+            const fileSizeElement = document.getElementById(`${formId}FileSize`);
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            uploadSpeed.textContent = `${speed.toFixed(1)} MB/s`;
+            fileSizeElement.textContent = `${fileSize.toFixed(2)} MB`;
+        }
+
+        // 分片上传函数
+        async function uploadFile(url, file, formId, callback) {
+            const progressContainer = document.getElementById(`${formId}Progress`);
+            progressContainer.style.display = 'block';
+
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            let uploadedChunks = 0;
+            let startTime = new Date().getTime();
+            let lastLoaded = 0;
+            let totalLoaded = 0;
+            let uploadSpeed = 0;
+            const fileSize = file.size / 1024 / 1024;
+
+            // 更新进度显示
+            function updateProgress() {
+                const percent = Math.round((uploadedChunks / totalChunks) * 100);
+                showUploadProgress(formId, percent, uploadSpeed, fileSize);
+            }
+
+            // 上传一个分片
+            async function uploadChunk(chunkIndex) {
+                const start = chunkIndex * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunk = file.slice(start, end);
+
+                const formData = new FormData();
+                formData.append('file', chunk);
+                formData.append('chunk_index', chunkIndex);
+                formData.append('total_chunks', totalChunks);
+                formData.append('file_name', file.name);
+
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': getCSRFToken()
+                        }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`分片${chunkIndex}上传失败: ${response.statusText}`);
+                    }
+
+                    uploadedChunks++;
+
+                    // 计算上传速度
+                    const now = new Date().getTime();
+                    const elapsedTime = (now - startTime) / 1000; // 秒
+                    totalLoaded += chunk.size;
+                    uploadSpeed = (totalLoaded / 1024 / 1024) / elapsedTime; // MB/s
+
+                    updateProgress();
+
+                    if (uploadedChunks < totalChunks) {
+                        // 继续上传下一个分片
+                        return uploadChunk(uploadedChunks);
+                    } else {
+                        // 所有分片上传完成，通知后端合并
+                        return mergeChunks(file.name, totalChunks);
+                    }
+                } catch (error) {
+                    throw error;
+                }
+            }
+
+            // 合并分片
+            async function mergeChunks(fileName, totalChunks) {
+                try {
+                    const response = await fetch('/merge_chunks', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify({
+                            file_name: fileName,
+                            total_chunks: totalChunks
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`合并分片失败: ${response.statusText}`);
+                    }
+
+                    const data = await response.json();
+                    callback(data);
+                } catch (error) {
+                    throw error;
+                }
+            }
+
+            // 开始上传第一个分片
+            try {
+                await uploadChunk(0);
+            } catch (error) {
+                callback({
+                    success: false,
+                    error: error.message
+                });
+            }
+        }
+
+        async function processPdf() {
+            const fileInput = document.getElementById('pdfFile');
+            const resultDiv = document.getElementById('pdfResult');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择PDF文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">处理中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const file = fileInput.files[0];
+
+            try {
+                await uploadFile('/process_pdf', file, 'pdf', function(data) {
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                ${data.message}
+                                <br>
+                                <a href="${data.download_url}" class="download-btn">下载Excel文件</a>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                    }
+                });
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">上传失败: ${error.message}</div>`;
+            }
+        }
+
+        async function reconcileExcel() {
+            const receiptInput = document.getElementById('receiptFile');
+            const totalInput = document.getElementById('totalFile');
+            const resultDiv = document.getElementById('excelResult');
+
+            if (!receiptInput.files.length || !totalInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择收据表和总表</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const receiptFile = receiptInput.files[0];
+            const totalFile = totalInput.files[0];
+
+            try {
+                // 并行上传两个文件
+                const [receiptData, totalData] = await Promise.all([
+                    new Promise(resolve => {
+                        uploadFile('/upload_receipt', receiptFile, 'excel', resolve);
+                    }),
+                    new Promise(resolve => {
+                        uploadFile('/upload_total', totalFile, 'excel', resolve);
+                    })
+                ]);
+
+                if (!receiptData.success) {
+                    throw new Error(`收据表上传失败: ${receiptData.error}`);
+                }
+
+                if (!totalData.success) {
+                    throw new Error(`总表上传失败: ${totalData.error}`);
+                }
+
+                // 开始对账
+                const response = await fetch('/reconcile_excel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        receipt_file_id: receiptData.file_id,
+                        total_file_id: totalData.file_id
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`对账失败: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">
+                            ${data.message}
+                            <br>
+                            <a href="${data.download_url}" class="download-btn">下载对账结果</a>
+                            ${data.log_url ? `<a href="${data.log_url}" class="download-btn">下载对账日志</a>` : ''}
+                        </div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

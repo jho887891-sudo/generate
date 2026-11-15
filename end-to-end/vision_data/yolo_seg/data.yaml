@@ -1,0 +1,6 @@
+path: /home/T7/wkq/end-to-end/vision_data/yolo_seg
+train: images/train
+val: images/val
+test: images/test
+names:
+  0: defect

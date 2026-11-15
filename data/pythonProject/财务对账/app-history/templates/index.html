@@ -1,0 +1,1698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>财务对账系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 15px 0 30px;
+            color: #2c3e50;
+            font-size: 2.4rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tablink {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 0;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tablink::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            transition: height 0.3s ease;
+            z-index: -1;
+        }
+
+        .tablink:hover {
+            color: white;
+        }
+
+        .tablink:hover::before {
+            height: 100%;
+        }
+
+        .tablink.active {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabcontent.active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.6rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        p {
+            margin-bottom: 25px;
+            color: #5a6268;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        .file-upload {
+            margin-bottom: 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            border: 2px dashed #e0e7ff;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .file-upload:hover {
+            border-color: #3498db;
+            background-color: #f0f8ff;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .file-upload label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .file-upload label::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 4px;
+        }
+
+        .file-input-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .file-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #fff;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-input:hover {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+        .file-input-button {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #3498db;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        button {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(52, 152, 219, 0.4);
+        }
+
+        button:hover::after {
+            left: 120%;
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 30px;
+            padding: 0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .loading {
+            background: linear-gradient(90deg, #e3f2fd, #bbdefb);
+            color: #1976d2;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 1.1rem;
+            animation: pulse 1.5s infinite;
+            border: 1px solid #bbdefb;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .success {
+            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+            color: #2e7d32;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #c8e6c9;
+            box-shadow: 0 4px 10px rgba(46, 125, 50, 0.1);
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+            text-decoration: none;
+        }
+
+        .download-btn:hover::after {
+            left: 120%;
+        }
+
+        .download-btn + .download-btn {
+            background: linear-gradient(to right, #17a2b8, #138496);
+        }
+
+        .download-btn + .download-btn:hover {
+            background: linear-gradient(to right, #138496, #117a8b);
+        }
+
+        /* 进度指示器 */
+        .progress-container {
+            width: 100%;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+            width: 0%;
+            transition: width 0.4s ease;
+            border-radius: 5px;
+        }
+
+        .progress-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.95rem;
+            color: #5a6268;
+            font-weight: 500;
+        }
+
+        .progress-message {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 1rem;
+            color: #3498db;
+            font-weight: 500;
+        }
+
+        .upload-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        .upload-speed {
+            font-weight: 600;
+            color: #3498db;
+        }
+
+        .file-size {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* 历史文件样式 */
+        .history-container {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-bottom: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+
+        .history-item:hover {
+            background-color: #f0f8ff;
+        }
+
+        .history-icon {
+            font-size: 1.5rem;
+            margin-right: 15px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .history-info {
+            flex: 1;
+        }
+
+        .history-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .history-meta {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .history-date {
+            font-style: italic;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-download {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .history-view {
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .history-view:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(46, 204, 113, 0.3);
+        }
+
+        .no-history {
+            text-align: center;
+            padding: 30px;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(to right, #95a5a6, #7f8c8d);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(149, 165, 166, 0.3);
+        }
+
+        .file-type-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .pdf-badge {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .excel-badge {
+            background: #2ecc71;
+            color: white;
+        }
+
+        .negative-badge {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .delivery-badge {
+            background: #3498db;
+            color: white;
+        }
+
+        .purchase-badge {
+            background: #f39c12;
+            color: white;
+        }
+
+        /* 文件预览 */
+        .file-preview {
+            margin-top: 15px;
+            padding: 12px;
+            border: 1px dashed #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+            font-size: 0.95rem;
+            display: none;
+        }
+
+        .file-preview p {
+            margin: 0;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .file-preview strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .preview-icon {
+            margin-right: 8px;
+            color: #3498db;
+        }
+
+        /* 操作指引 */
+        .instructions {
+            background-color: #f0f8ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* 子标签页 */
+        .sub-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .sub-tablink {
+            padding: 12px 20px;
+            background: #e0e7ff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #4a5568;
+            transition: all 0.3s ease;
+        }
+
+        .sub-tablink:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        .sub-tablink.active {
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+        }
+
+        .sub-tabcontent {
+            display: none;
+            padding: 20px;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sub-tabcontent.active {
+            display: block;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                max-width: 95%;
+            }
+
+            h1 {
+                font-size: 2rem;
+                padding-bottom: 10px;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tablink {
+                border-radius: 8px;
+                margin-bottom: 5px;
+            }
+
+            .tabcontent {
+                padding: 20px;
+            }
+
+            .download-btn {
+                display: block;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .sub-tabs {
+                flex-direction: column;
+            }
+
+            .sub-tablink {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                background: #f4f4f4;
+            }
+
+            .container {
+                padding: 20px 15px;
+                border-radius: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .file-upload {
+                padding: 12px;
+            }
+
+            input[type="file"] {
+                padding: 10px;
+                font-size: 0.95rem;
+            }
+
+            button {
+                padding: 14px;
+                font-size: 1rem;
+            }
+
+            .download-btn {
+                padding: 12px;
+                font-size: 1rem;
+                min-width: auto;
+            }
+
+            .result {
+                min-height: 100px;
+            }
+
+            .loading, .success, .error {
+                padding: 20px;
+            }
+        }
+
+        /* 图标样式 */
+        .icon {
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #2c3e50;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>财务对账系统</h1>
+
+        <div class="tabs">
+            <button class="tablink active" onclick="openTab('tab1')">
+                <i class="fas fa-file-pdf"></i> PDF转Excel
+            </button>
+            <button class="tablink" onclick="openTab('tab2')">
+                <i class="fas fa-file-excel"></i> 对账功能
+            </button>
+            <button class="tablink" onclick="openTab('tab3')">
+                <i class="fas fa-calculator"></i> 数量取负
+            </button>
+            <button class="tablink" onclick="openTab('tab4')">
+                <i class="fas fa-history"></i> 历史文件
+            </button>
+        </div>
+
+        <div id="tab1" class="tabcontent active">
+            <h2><i class="fas fa-file-pdf"></i> PDF转Excel工具</h2>
+            <p>上传PDF文件，系统将自动识别表格内容并生成Excel文件</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>仅支持PDF格式文件</li>
+                    <li>文件大小不超过50MB</li>
+                    <li>处理时间取决于文件大小</li>
+                    <li>处理完成后可下载Excel文件</li>
+                </ul>
+            </div>
+
+            <form id="pdfForm" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="pdfFile">选择PDF文件:</label>
+                    <div class="file-input-container">
+                        <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" required class="file-input">
+                        <div class="file-input-button" onclick="document.getElementById('pdfFile').click()">
+                            <i class="fas fa-folder-open"></i> 浏览
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件预览 -->
+                <div class="file-preview" id="pdfPreview">
+                    <p><i class="fas fa-file-pdf preview-icon"></i> <strong>文件名:</strong> <span id="pdfFileName"></span></p>
+                    <p><strong>文件大小:</strong> <span id="pdfFileSizePreview"></span></p>
+                </div>
+
+                <!-- 上传进度条容器 -->
+                <div class="progress-container" id="pdfUploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="pdfUploadProgressBar"></div>
+                    </div>
+                    <div class="progress-text" id="pdfUploadProgressText">0%</div>
+                    <div class="upload-info">
+                        <span class="upload-speed" id="pdfUploadSpeed">0 KB/s</span>
+                        <span class="file-size" id="pdfFileSize">0 MB</span>
+                    </div>
+                </div>
+
+                <!-- 处理进度条容器 -->
+                <div class="progress-container" id="pdfProcessProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="pdfProcessProgressBar"></div>
+                    </div>
+                    <div class="progress-text" id="pdfProcessProgressText">0%</div>
+                    <div class="progress-message" id="pdfProcessProgressMessage">等待开始处理...</div>
+                </div>
+
+                <button type="button" onclick="processPdf()">
+                    <i class="fas fa-cogs"></i> 开始处理
+                </button>
+            </form>
+
+            <div id="pdfResult" class="result"></div>
+        </div>
+
+        <div id="tab2" class="tabcontent">
+            <h2><i class="fas fa-file-excel"></i> 对账功能</h2>
+            <p>选择对账类型并上传相应文件进行对账处理</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>选择对账类型：Excel对账、送货单对账或采购对账</li>
+                    <li>根据提示上传相应的文件</li>
+                    <li>系统将自动进行对账处理</li>
+                    <li>处理完成后可下载结果文件</li>
+                </ul>
+            </div>
+
+            <!-- 子标签页 -->
+            <div class="sub-tabs">
+                <button class="sub-tablink active" onclick="openSubTab('excelTab')">
+                    <i class="fas fa-file-excel"></i> Excel对账
+                </button>
+                <button class="sub-tablink" onclick="openSubTab('deliveryTab')">
+                    <i class="fas fa-truck"></i> 送货单对账
+                </button>
+                <button class="sub-tablink" onclick="openSubTab('purchaseTab')">
+                    <i class="fas fa-shopping-cart"></i> 采购对账
+                </button>
+            </div>
+
+            <!-- Excel对账子标签页 -->
+            <div id="excelTab" class="sub-tabcontent active">
+                <h3><i class="fas fa-file-excel"></i> Excel对账</h3>
+                <p>上传收据表和总表，系统将自动进行对账处理</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>需要上传两个Excel文件：收据表和总表</li>
+                        <li>文件格式支持.xlsx和.xls</li>
+                        <li>系统将生成对账结果和日志文件</li>
+                        <li>处理完成后可下载结果文件</li>
+                    </ul>
+                </div>
+
+                <form id="excelForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="receiptFile">选择收据表:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="receiptFile" name="receipt_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('receiptFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-upload">
+                        <label for="totalFile">选择总表:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="totalFile" name="total_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('totalFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="excelPreview">
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>收据表:</strong> <span id="receiptFileName"></span></p>
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>总表:</strong> <span id="totalFileName"></span></p>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="excelUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="excelUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="excelUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="excelUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="excelFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="reconcileExcel()">
+                        <i class="fas fa-cogs"></i> 开始对账
+                    </button>
+                </form>
+
+                <div id="excelResult" class="result"></div>
+            </div>
+
+            <!-- 送货单对账子标签页 -->
+            <div id="deliveryTab" class="sub-tabcontent">
+                <h3><i class="fas fa-truck"></i> 送货单对账</h3>
+                <p>上传入库单和送货单，系统将自动进行对账处理</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>需要上传两个Excel文件：入库单和送货单</li>
+                        <li>文件格式支持.xlsx和.xls</li>
+                        <li>系统将生成对账结果和日志文件</li>
+                        <li>处理完成后可下载结果文件</li>
+                    </ul>
+                </div>
+
+                <form id="deliveryForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="deliveryReceiptFile">选择入库单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="deliveryReceiptFile" name="delivery_receipt_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('deliveryReceiptFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-upload">
+                        <label for="deliveryTotalFile">选择送货单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="deliveryTotalFile" name="delivery_total_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('deliveryTotalFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="deliveryPreview">
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>入库单:</strong> <span id="deliveryReceiptFileName"></span></p>
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>送货单:</strong> <span id="deliveryTotalFileName"></span></p>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="deliveryUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="deliveryUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="deliveryUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="deliveryUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="deliveryFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="reconcileDelivery()">
+                        <i class="fas fa-cogs"></i> 开始对账
+                    </button>
+                </form>
+
+                <div id="deliveryResult" class="result"></div>
+            </div>
+
+            <!-- 采购对账子标签页 -->
+            <div id="purchaseTab" class="sub-tabcontent">
+                <h3><i class="fas fa-shopping-cart"></i> 采购对账</h3>
+                <p>上传采购收据单和采购对账单，系统将自动进行对账处理</p>
+
+                <div class="instructions">
+                    <h4><i class="fas fa-info-circle"></i> 操作指引</h4>
+                    <ul>
+                        <li>需要上传两个Excel文件：采购收据单和采购对账单</li>
+                        <li>文件格式支持.xlsx和.xls</li>
+                        <li>系统将生成对账结果和日志文件</li>
+                        <li>处理完成后可下载结果文件</li>
+                    </ul>
+                </div>
+
+                <form id="purchaseForm" enctype="multipart/form-data">
+                    <div class="file-upload">
+                        <label for="purchaseReceiptFile">选择采购收据单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="purchaseReceiptFile" name="purchase_receipt_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('purchaseReceiptFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="file-upload">
+                        <label for="purchaseStatementFile">选择采购对账单:</label>
+                        <div class="file-input-container">
+                            <input type="file" id="purchaseStatementFile" name="purchase_statement_file" accept=".xlsx,.xls" required class="file-input">
+                            <div class="file-input-button" onclick="document.getElementById('purchaseStatementFile').click()">
+                                <i class="fas fa-folder-open"></i> 浏览
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 文件预览 -->
+                    <div class="file-preview" id="purchasePreview">
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购收据单:</strong> <span id="purchaseReceiptFileName"></span></p>
+                        <p><i class="fas fa-file-excel preview-icon"></i> <strong>采购对账单:</strong> <span id="purchaseStatementFileName"></span></p>
+                    </div>
+
+                    <!-- 上传进度条容器 -->
+                    <div class="progress-container" id="purchaseUploadProgress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="purchaseUploadProgressBar"></div>
+                        </div>
+                        <div class="progress-text" id="purchaseUploadProgressText">0%</div>
+                        <div class="upload-info">
+                            <span class="upload-speed" id="purchaseUploadSpeed">0 KB/s</span>
+                            <span class="file-size" id="purchaseFileSize">0 MB</span>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="reconcilePurchase()">
+                        <i class="fas fa-cogs"></i> 开始对账
+                    </button>
+                </form>
+
+                <div id="purchaseResult" class="result"></div>
+            </div>
+        </div>
+
+        <div id="tab3" class="tabcontent">
+            <h2><i class="fas fa-calculator"></i> Excel数量取负工具</h2>
+            <p>上传Excel文件，系统将自动将"数量"列的值取负（乘以-1）</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>仅支持Excel格式文件（.xlsx, .xls）</li>
+                    <li>文件必须包含"数量"列</li>
+                    <li>处理完成后可下载修改后的文件</li>
+                    <li>原始文件不会被修改</li>
+                </ul>
+            </div>
+
+            <form id="negativeForm" enctype="multipart/form-data">
+                <div class="file-upload">
+                    <label for="negativeFile">选择Excel文件:</label>
+                    <div class="file-input-container">
+                        <input type="file" id="negativeFile" name="negative_file" accept=".xlsx,.xls" required class="file-input">
+                        <div class="file-input-button" onclick="document.getElementById('negativeFile').click()">
+                            <i class="fas fa-folder-open"></i> 浏览
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 文件预览 -->
+                <div class="file-preview" id="negativePreview">
+                    <p><i class="fas fa-file-excel preview-icon"></i> <strong>文件名:</strong> <span id="negativeFileName"></span></p>
+                    <p><strong>文件大小:</strong> <span id="negativeFileSizePreview"></span></p>
+                </div>
+
+                <!-- 上传进度条容器 -->
+                <div class="progress-container" id="negativeUploadProgress">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="negativeUploadProgressBar"></div>
+                    </div>
+                    <div class="progress-text" id="negativeUploadProgressText">0%</div>
+                    <div class="upload-info">
+                        <span class="upload-speed" id="negativeUploadSpeed">0 KB/s</span>
+                        <span class="file-size" id="negativeFileSize">0 MB</span>
+                    </div>
+                </div>
+
+                <button type="button" onclick="processNegative()">
+                    <i class="fas fa-cogs"></i> 开始处理
+                </button>
+            </form>
+
+            <div id="negativeResult" class="result"></div>
+        </div>
+
+        <!-- 历史文件标签页 -->
+        <div id="tab4" class="tabcontent">
+            <h2><i class="fas fa-history"></i> 历史文件</h2>
+            <p>查看最近处理过的文件，可以选择下载或查看详情</p>
+
+            <div class="instructions">
+                <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+                <ul>
+                    <li>显示最近处理过的文件记录</li>
+                    <li>支持按类型筛选历史文件</li>
+                    <li>可下载或查看文件详情</li>
+                    <li>点击刷新按钮更新文件列表</li>
+                </ul>
+            </div>
+
+            <div class="history-header">
+                <h3>最近文件</h3>
+                <div>
+                    <select id="fileTypeFilter" onchange="loadHistoryFiles()" style="padding: 8px; border-radius: 5px; margin-right: 10px;">
+                        <option value="">所有类型</option>
+                        <option value="pdf_excel">PDF转Excel</option>
+                        <option value="excel_reconciliation">Excel对账</option>
+                        <option value="delivery_reconciliation">送货单对账</option>
+                        <option value="purchase_reconciliation">采购对账</option>
+                        <option value="negative_excel">数量取负</option>
+                    </select>
+                    <button class="refresh-btn" onclick="loadHistoryFiles()">
+                        <i class="fas fa-sync-alt"></i> 刷新
+                    </button>
+                </div>
+            </div>
+
+            <div class="history-container" id="historyFiles">
+                <div class="no-history">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加CSRF令牌处理
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return '';
+        }
+
+        function openTab(tabName) {
+            var i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tabcontent");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tablink");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+
+            // 如果打开的是历史文件标签页，则加载历史文件
+            if (tabName === 'tab4') {
+                loadHistoryFiles();
+            }
+        }
+
+        function openSubTab(subTabName) {
+            var i, subTabcontent, subTablinks;
+            subTabcontent = document.getElementsByClassName("sub-tabcontent");
+            for (i = 0; i < subTabcontent.length; i++) {
+                subTabcontent[i].classList.remove("active");
+            }
+            subTablinks = document.getElementsByClassName("sub-tablink");
+            for (i = 0; i < subTablinks.length; i++) {
+                subTablinks[i].classList.remove("active");
+            }
+            document.getElementById(subTabName).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+        // 文件压缩函数（伪代码）
+        function compressFile(file, callback) {
+            // 在实际应用中，这里可以使用压缩库如JSZip或pako
+            // 这里为了演示，直接返回原文件
+            console.log(`压缩文件: ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`);
+            callback(file);
+        }
+
+        // 显示上传进度
+        function showUploadProgress(formId, progress, speed, fileSize) {
+            const progressBar = document.getElementById(`${formId}UploadProgressBar`);
+            const progressText = document.getElementById(`${formId}UploadProgressText`);
+            const uploadSpeed = document.getElementById(`${formId}UploadSpeed`);
+            const fileSizeElement = document.getElementById(`${formId}FileSize`);
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            uploadSpeed.textContent = `${speed} KB/s`;
+            fileSizeElement.textContent = `${fileSize} MB`;
+        }
+
+        // 显示处理进度
+        function showProcessProgress(progress, message) {
+            const progressBar = document.getElementById('pdfProcessProgressBar');
+            const progressText = document.getElementById('pdfProcessProgressText');
+            const progressMessage = document.getElementById('pdfProcessProgressMessage');
+
+            progressBar.style.width = `${progress}%`;
+            progressText.textContent = `${progress}%`;
+            progressMessage.textContent = message;
+        }
+
+        // 上传文件函数
+        function uploadFile(url, formData, formId, callback) {
+            const uploadProgressContainer = document.getElementById(`${formId}UploadProgress`);
+            uploadProgressContainer.style.display = 'block';
+
+            const xhr = new XMLHttpRequest();
+            const startTime = new Date().getTime();
+            let lastLoaded = 0;
+
+            xhr.upload.addEventListener('progress', function(e) {
+                if (e.lengthComputable) {
+                    const percent = Math.round((e.loaded / e.total) * 100);
+                    const elapsedTime = (new Date().getTime() - startTime) / 1000;
+                    const speed = ((e.loaded - lastLoaded) / 1024 / elapsedTime).toFixed(1);
+                    const fileSize = (e.total / 1024 / 1024).toFixed(2);
+
+                    showUploadProgress(formId, percent, speed, fileSize);
+
+                    lastLoaded = e.loaded;
+                }
+            });
+
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4) {
+                    uploadProgressContainer.style.display = 'none';
+                    if (xhr.status === 200) {
+                        callback(JSON.parse(xhr.responseText));
+                    } else {
+                        callback({
+                            success: false,
+                            error: `上传失败: ${xhr.statusText}`
+                        });
+                    }
+                }
+            };
+
+            xhr.open('POST', url, true);
+            xhr.setRequestHeader('X-CSRFToken', getCSRFToken());
+            xhr.send(formData);
+        }
+
+        // 获取处理进度
+        function getProcessProgress(taskId) {
+            fetch(`/progress/${taskId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.progress !== undefined) {
+                        showProcessProgress(data.progress, data.message);
+
+                        // 如果处理完成，显示下载链接
+                        if (data.progress === 100 && data.download_url) {
+                            const resultDiv = document.getElementById('pdfResult');
+                            resultDiv.innerHTML = `
+                                <div class="success">
+                                    ${data.message}
+                                    <br>
+                                    <a href="${data.download_url}" class="download-btn">下载Excel文件</a>
+                                </div>
+                            `;
+                        }
+
+                        // 如果还在处理中，继续轮询
+                        if (data.progress < 100 && data.progress >= 0) {
+                            setTimeout(() => getProcessProgress(taskId), 1000);
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('获取进度失败:', error);
+                    // 出错后继续尝试获取进度
+                    setTimeout(() => getProcessProgress(taskId), 2000);
+                });
+        }
+
+        // 显示文件预览信息
+        function showFilePreview(fileInput, previewId, fileNameId, fileSizeId) {
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const preview = document.getElementById(previewId);
+                const fileNameElement = document.getElementById(fileNameId);
+                const fileSizeElement = document.getElementById(fileSizeId);
+
+                fileNameElement.textContent = file.name;
+                if (fileSizeId) {
+                    fileSizeElement.textContent = `${(file.size / 1024 / 1024).toFixed(2)} MB`;
+                }
+                preview.style.display = 'block';
+            }
+        }
+
+        // 初始化文件预览事件监听
+        function initFilePreviews() {
+            // PDF文件预览
+            document.getElementById('pdfFile').addEventListener('change', function() {
+                showFilePreview(this, 'pdfPreview', 'pdfFileName', 'pdfFileSizePreview');
+            });
+
+            // Excel对账预览
+            document.getElementById('receiptFile').addEventListener('change', function() {
+                showFilePreview(this, 'excelPreview', 'receiptFileName', null);
+            });
+
+            document.getElementById('totalFile').addEventListener('change', function() {
+                showFilePreview(this, 'excelPreview', 'totalFileName', null);
+            });
+
+            // 送货单对账预览
+            document.getElementById('deliveryReceiptFile').addEventListener('change', function() {
+                showFilePreview(this, 'deliveryPreview', 'deliveryReceiptFileName', null);
+            });
+
+            document.getElementById('deliveryTotalFile').addEventListener('change', function() {
+                showFilePreview(this, 'deliveryPreview', 'deliveryTotalFileName', null);
+            });
+
+            // 采购对账预览
+            document.getElementById('purchaseReceiptFile').addEventListener('change', function() {
+                showFilePreview(this, 'purchasePreview', 'purchaseReceiptFileName', null);
+            });
+
+            document.getElementById('purchaseStatementFile').addEventListener('change', function() {
+                showFilePreview(this, 'purchasePreview', 'purchaseStatementFileName', null);
+            });
+
+            // 数量取负文件预览
+            document.getElementById('negativeFile').addEventListener('change', function() {
+                showFilePreview(this, 'negativePreview', 'negativeFileName', 'negativeFileSizePreview');
+            });
+        }
+
+        function processPdf() {
+            const fileInput = document.getElementById('pdfFile');
+            const resultDiv = document.getElementById('pdfResult');
+            const processProgress = document.getElementById('pdfProcessProgress');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择PDF文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            // 显示处理进度条
+            processProgress.style.display = 'block';
+            showProcessProgress(0, '准备处理文件...');
+
+            resultDiv.innerHTML = '<div class="loading">处理中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+
+            // 压缩文件（在实际应用中应实现真正的压缩）
+            compressFile(file, function(compressedFile) {
+                formData.append('pdf_file', compressedFile);
+
+                // 使用优化的上传函数
+                uploadFile('/process_pdf', formData, 'pdf', function(data) {
+                    if (data.success) {
+                        // 开始轮询处理进度
+                        getProcessProgress(data.task_id);
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                        processProgress.style.display = 'none';
+                    }
+                });
+            });
+        }
+
+        function reconcileExcel() {
+            const receiptInput = document.getElementById('receiptFile');
+            const totalInput = document.getElementById('totalFile');
+            const resultDiv = document.getElementById('excelResult');
+
+            if (!receiptInput.files.length || !totalInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择收据表和总表</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const receiptFile = receiptInput.files[0];
+            const totalFile = totalInput.files[0];
+            const formData = new FormData();
+
+            // 压缩文件（在实际应用中应实现真正的压缩）
+            compressFile(receiptFile, function(compressedReceipt) {
+                compressFile(totalFile, function(compressedTotal) {
+                    formData.append('receipt_file', compressedReceipt);
+                    formData.append('total_file', compressedTotal);
+
+                    // 使用优化的上传函数
+                    uploadFile('/reconcile_excel', formData, 'excel', function(data) {
+                        if (data.success) {
+                            resultDiv.innerHTML = `
+                                <div class="success">
+                                    ${data.message}
+                                    <br>
+                                    <a href="${data.download_url}" class="download-btn">下载对账结果</a>
+                                    ${data.log_url ? `<a href="${data.log_url}" class="download-btn">下载对账日志</a>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                        }
+                    });
+                });
+            });
+        }
+
+        function reconcileDelivery() {
+            const receiptInput = document.getElementById('deliveryReceiptFile');
+            const totalInput = document.getElementById('deliveryTotalFile');
+            const resultDiv = document.getElementById('deliveryResult');
+
+            if (!receiptInput.files.length || !totalInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择入库单和送货单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const receiptFile = receiptInput.files[0];
+            const totalFile = totalInput.files[0];
+            const formData = new FormData();
+
+            // 压缩文件（在实际应用中应实现真正的压缩）
+            compressFile(receiptFile, function(compressedReceipt) {
+                compressFile(totalFile, function(compressedTotal) {
+                    formData.append('delivery_receipt_file', compressedReceipt);
+                    formData.append('delivery_total_file', compressedTotal);
+
+                    // 使用优化的上传函数
+                    uploadFile('/reconcile_delivery', formData, 'delivery', function(data) {
+                        if (data.success) {
+                            resultDiv.innerHTML = `
+                                <div class="success">
+                                    ${data.message}
+                                    <br>
+                                    <a href="${data.download_url}" class="download-btn">下载对账结果</a>
+                                    ${data.log_url ? `<a href="${data.log_url}" class="download-btn">下载对账日志</a>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                        }
+                    });
+                });
+            });
+        }
+
+        function reconcilePurchase() {
+            const receiptInput = document.getElementById('purchaseReceiptFile');
+            const statementInput = document.getElementById('purchaseStatementFile');
+            const resultDiv = document.getElementById('purchaseResult');
+
+            if (!receiptInput.files.length || !statementInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择采购收据单和采购对账单</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">对账中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const receiptFile = receiptInput.files[0];
+            const statementFile = statementInput.files[0];
+            const formData = new FormData();
+
+            // 压缩文件（在实际应用中应实现真正的压缩）
+            compressFile(receiptFile, function(compressedReceipt) {
+                compressFile(statementFile, function(compressedStatement) {
+                    formData.append('purchase_receipt_file', compressedReceipt);
+                    formData.append('purchase_statement_file', compressedStatement);
+
+                    // 使用优化的上传函数
+                    uploadFile('/reconcile_purchase', formData, 'purchase', function(data) {
+                        if (data.success) {
+                            resultDiv.innerHTML = `
+                                <div class="success">
+                                    ${data.message}
+                                    <br>
+                                    <a href="${data.download_url}" class="download-btn">下载对账结果</a>
+                                    ${data.log_url ? `<a href="${data.log_url}" class="download-btn">下载对账日志</a>` : ''}
+                                </div>
+                            `;
+                        } else {
+                            resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                        }
+                    });
+                });
+            });
+        }
+
+        // 处理数量取负的函数
+        function processNegative() {
+            const fileInput = document.getElementById('negativeFile');
+            const resultDiv = document.getElementById('negativeResult');
+
+            if (!fileInput.files.length) {
+                resultDiv.innerHTML = '<div class="error">请选择Excel文件</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div class="loading">处理中，请稍候...</div>';
+            resultDiv.style.display = 'block';
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+
+            // 压缩文件（在实际应用中应实现真正的压缩）
+            compressFile(file, function(compressedFile) {
+                formData.append('negative_file', compressedFile);
+
+                // 使用优化的上传函数
+                uploadFile('/negative_excel', formData, 'negative', function(data) {
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="success">
+                                ${data.message}
+                                <br>
+                                <a href="${data.download_url}" class="download-btn">下载处理后的文件</a>
+                            </div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">${data.error}</div>`;
+                    }
+                });
+            });
+        }
+
+        // 加载历史文件函数
+        function loadHistoryFiles() {
+            const historyContainer = document.getElementById('historyFiles');
+            historyContainer.innerHTML = '<div class="no-history">加载中...</div>';
+
+            const fileType = document.getElementById('fileTypeFilter').value;
+
+            fetch(`/history/files?type=${fileType}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        historyContainer.innerHTML = `<div class="no-history">${data.error}</div>`;
+                        return;
+                    }
+
+                    if (data.length === 0) {
+                        historyContainer.innerHTML = '<div class="no-history">暂无历史文件</div>';
+                        return;
+                    }
+
+                    historyContainer.innerHTML = '';
+
+                    data.forEach(file => {
+                        // 确定文件类型图标和徽章
+                        let icon = '📄';
+                        let badgeClass = '';
+                        let badgeText = '';
+
+                        if (file.file_type === 'pdf_excel') {
+                            icon = '📊';
+                            badgeClass = 'pdf-badge';
+                            badgeText = 'PDF转Excel';
+                        } else if (file.file_type === 'excel_reconciliation') {
+                            icon = '📈';
+                            badgeClass = 'excel-badge';
+                            badgeText = 'Excel对账';
+                        } else if (file.file_type === 'delivery_reconciliation') {
+                            icon = '🚚';
+                            badgeClass = 'delivery-badge';
+                            badgeText = '送货单对账';
+                        } else if (file.file_type === 'purchase_reconciliation') {
+                            icon = '🛒';
+                            badgeClass = 'purchase-badge';
+                            badgeText = '采购对账';
+                        } else if (file.file_type === 'negative_excel') {
+                            icon = '🔢';
+                            badgeClass = 'negative-badge';
+                            badgeText = '数量取负';
+                        }
+
+                        const item = document.createElement('div');
+                        item.className = 'history-item';
+                        item.innerHTML = `
+                            <div class="history-icon">${icon}</div>
+                            <div class="history-info">
+                                <div class="history-name">
+                                    ${file.filename}
+                                    <span class="file-type-badge ${badgeClass}">${badgeText}</span>
+                                </div>
+                                <div class="history-meta">
+                                    <div class="history-date">${file.upload_time}</div>
+                                    <div class="history-actions">
+                                        <div class="history-download" onclick="downloadFile('${file.filename}')">
+                                            <i class="fas fa-download"></i> 下载
+                                        </div>
+                                        <div class="history-view" onclick="viewFileDetail(${file.id})">
+                                            <i class="fas fa-info-circle"></i> 详情
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        historyContainer.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error('加载历史文件失败:', error);
+                    historyContainer.innerHTML = '<div class="no-history">加载失败，请重试</div>';
+                });
+        }
+
+        // 下载文件函数
+        function downloadFile(filename) {
+            window.open(`/download/${filename}`, '_blank');
+        }
+
+        // 查看文件详情函数
+        function viewFileDetail(fileId) {
+            window.location.href = `/file/${fileId}`;
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            // 初始化文件预览
+            initFilePreviews();
+
+            // 加载历史文件
+            loadHistoryFiles();
+        });
+    </script>
+</body>
+</html>

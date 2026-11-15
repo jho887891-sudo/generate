@@ -1,0 +1,8 @@
+
+path: .
+train: data_G/train/images
+val: data_G/valid/images
+test: data_G/test/images
+
+nc: 1
+names: ['class_0']

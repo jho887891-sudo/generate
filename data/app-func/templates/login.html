@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>对账系统 - 登录</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #3498db, #2c3e50);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 添加背景动画元素 */
+        body::before, body::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            z-index: 0;
+        }
+
+        body::before {
+            top: -150px;
+            right: -100px;
+        }
+
+        body::after {
+            bottom: -150px;
+            left: -100px;
+        }
+
+        .login-container {
+            background: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-container:hover {
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .login-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .logo h1 {
+            color: #2c3e50;
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .logo h1 i {
+            color: #3498db;
+            font-size: 2.5rem;
+        }
+
+        .logo p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group label i {
+            width: 16px;
+            text-align: center;
+        }
+
+        .input-container {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 15px 14px 42px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background-color: #f9f9f9;
+        }
+
+        .form-group input:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.15);
+            outline: none;
+            background-color: white;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            z-index: 2;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .checkbox-group input {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            padding: 16px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+
+        .login-btn:hover::after {
+            left: 100%;
+        }
+
+        .login-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-btn:disabled:hover::after {
+            left: -100%;
+        }
+
+        .message {
+            padding: 14px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .footer p:first-child {
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .footer p:last-child {
+            font-size: 0.85rem;
+            color: #95a5a6;
+        }
+
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 30px 20px;
+            }
+
+            .logo h1 {
+                font-size: 1.8rem;
+            }
+
+            .logo h1 i {
+                font-size: 2rem;
+            }
+        }
+
+        /* 添加密码可见性切换 */
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #7f8c8d;
+            cursor: pointer;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1><i class="fas fa-file-invoice-dollar"></i> 对账系统</h1>
+            <p>请登录以继续使用</p>
+        </div>
+
+        <form id="loginForm">
+            <div class="message" id="loginMessage"></div>
+
+            <div class="form-group">
+                <label for="username"><i class="fas fa-user"></i> 用户名</label>
+                <div class="input-container">
+                    <i class="fas fa-user input-icon"></i>
+                    <input type="text" id="username" name="username" required autocomplete="username" placeholder="请输入用户名">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password"><i class="fas fa-lock"></i> 密码</label>
+                <div class="input-container">
+                    <i class="fas fa-lock input-icon"></i>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="请输入密码">
+                    <i class="fas fa-eye password-toggle" id="passwordToggle"></i>
+                </div>
+            </div>
+
+            <div class="checkbox-group">
+                <input type="checkbox" id="remember_me" name="remember_me">
+                <label for="remember_me">记住我</label>
+            </div>
+
+            <button type="submit" class="login-btn" id="loginBtn">
+                <span id="loginText">登录</span>
+                <span id="loginLoading" style="display: none;">
+                    <span class="loading"></span> 登录中...
+                </span>
+            </button>
+        </form>
+
+        <div class="footer">
+            <p>© 2025 对账系统 v1.0</p>
+            <p>默认账号: 工号＋密码</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            login();
+        });
+
+        // 密码可见性切换功能
+        document.getElementById('passwordToggle').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this;
+
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        function login() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = document.getElementById('remember_me').checked;
+            const messageDiv = document.getElementById('loginMessage');
+            const loginBtn = document.getElementById('loginBtn');
+            const loginText = document.getElementById('loginText');
+            const loginLoading = document.getElementById('loginLoading');
+
+            // 显示加载状态
+            loginBtn.disabled = true;
+            loginText.style.display = 'none';
+            loginLoading.style.display = 'inline';
+
+            // 隐藏消息
+            messageDiv.style.display = 'none';
+
+            // 获取重定向URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const nextUrl = urlParams.get('next') || '/';
+
+            fetch('/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: new URLSearchParams({
+                    'username': username,
+                    'password': password,
+                    'remember_me': rememberMe ? 'on' : 'off'
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || `HTTP错误: ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`HTTP错误: ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    messageDiv.textContent = '登录成功，正在跳转...';
+                    messageDiv.className = 'message success';
+                    messageDiv.style.display = 'block';
+
+                    // 延迟跳转，让用户看到成功消息
+                    setTimeout(() => {
+                        window.location.href = data.redirect || '/';
+                    }, 1000);
+                } else {
+                    throw new Error(data.error || '登录失败');
+                }
+            })
+            .catch(error => {
+                console.error('登录请求失败:', error);
+
+                let errorMessage = error.message;
+                if (errorMessage.includes('401')) {
+                    errorMessage = '用户名或密码错误';
+                } else if (errorMessage.includes('NetworkError') || errorMessage.includes('Failed to fetch')) {
+                    errorMessage = '网络连接失败，请检查网络设置';
+                }
+
+                messageDiv.textContent = errorMessage;
+                messageDiv.className = 'message error';
+                messageDiv.style.display = 'block';
+
+                // 恢复按钮状态
+                loginBtn.disabled = false;
+                loginText.style.display = 'inline';
+                loginLoading.style.display = 'none';
+            });
+        }
+
+        // 按Enter键登录
+        document.getElementById('password').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                login();
+            }
+        });
+
+        // 页面加载后自动聚焦用户名输入框
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('username').focus();
+        });
+    </script>
+</body>
+</html>

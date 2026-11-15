@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SVP-Text 多模态溯源系统</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="app-frame">
+      <aside class="sidebar">
+        <div class="brand">
+          <strong>SVP-Text</strong>
+          <span>多模态压铸气孔溯源系统</span>
+        </div>
+
+        <nav class="nav-list" aria-label="系统页面">
+          <button class="nav-item active" type="button" data-page="analysis">新建分析</button>
+          <button class="nav-item" type="button" data-page="results">本次结果</button>
+          <button class="nav-item" type="button" data-page="visual">视觉证据</button>
+          <button class="nav-item" type="button" data-page="prompt">参数与 Prompt</button>
+          <button class="nav-item" type="button" data-page="history">历史记录</button>
+          <button class="nav-item" type="button" data-page="download">下载中心</button>
+        </nav>
+
+        <div class="sidebar-status">
+          <span class="status-pill" id="healthStatus">服务检测中</span>
+          <button class="ghost-btn full" id="refreshHistoryBtn" type="button">刷新历史</button>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="page-hero">
+          <div>
+            <p class="eyebrow">Vision → Structured Visual Prompt → Text LLM</p>
+            <h1>SVP-Text 多模态压铸气孔溯源系统</h1>
+            <p>每个模块独立成页：输入、答案、视觉证据、Prompt 证据和历史结果分开展示，便于答辩时按步骤讲清证据链。</p>
+          </div>
+          <div class="hero-actions">
+            <a class="download-btn disabled" id="downloadLink" href="#" download>下载本次输出</a>
+          </div>
+        </header>
+
+        <section class="config-strip">
+          <div><span>配置</span><strong id="configPath">读取中</strong></div>
+          <div><span>视觉模型</span><strong id="visionPath">读取中</strong></div>
+          <div><span>语言模型</span><strong id="llmPath">读取中</strong></div>
+          <div><span>LoRA</span><strong id="adapterPath">读取中</strong></div>
+        </section>
+
+        <section class="page-view active" id="page-analysis">
+          <div class="two-column">
+            <section class="panel">
+              <div class="section-title">
+                <span>新建分析</span>
+                <button class="ghost-btn" id="loadDefaultsBtn" type="button">填入示例</button>
+              </div>
+
+              <div class="form-row three">
+                <label class="field">
+                  <span>样本编号</span>
+                  <input id="sampleId" type="text" placeholder="如 47243" />
+                </label>
+                <label class="field">
+                  <span>探伤图编号</span>
+                  <input id="imageNo" type="text" placeholder="可选" />
+                </label>
+                <label class="field">
+                  <span>料号/批次</span>
+                  <input id="batchNo" type="text" placeholder="可选" />
+                </label>
+              </div>
+
+              <label class="upload-zone" for="imageInput">
+                <input id="imageInput" type="file" accept="image/*" multiple />
+                <strong>上传探伤图片</strong>
+                <span>支持多视角图片，系统会按选择顺序进入视觉层识别。</span>
+              </label>
+              <div class="preview-grid" id="previewGrid"></div>
+
+              <div class="section-title compact">
+                <span>压铸参数</span>
+                <button class="ghost-btn" id="toggleJsonBtn" type="button">JSON</button>
+              </div>
+              <div class="params-grid" id="paramsGrid"></div>
+              <textarea id="paramsJson" class="json-box hidden" spellcheck="false"></textarea>
+              <div class="validation-box" id="paramValidation">参数校验结果将在提交前显示。</div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <span>问题与运行</span>
+                <span class="method-tag">SVP-Text</span>
+              </div>
+
+              <label class="field">
+                <span>溯源问题</span>
+                <textarea id="questions" rows="7" placeholder="每行一个问题。&#10;例如：当前样本应优先从高速充型链还是压力建立链判断？"></textarea>
+              </label>
+              <div class="template-row">
+                <button type="button" class="ghost-btn question-template">总体风险判断</button>
+                <button type="button" class="ghost-btn question-template">牙孔区域异常分析</button>
+                <button type="button" class="ghost-btn question-template">焊接区域异常分析</button>
+                <button type="button" class="ghost-btn question-template">参数链优先级判断</button>
+                <button type="button" class="ghost-btn question-template">同工况验证计划</button>
+              </div>
+
+              <label class="switch-row">
+                <input id="useGraph" type="checkbox" />
+                <span>启用图谱辅助证据</span>
+              </label>
+
+              <details class="advanced-options">
+                <summary>高级选项</summary>
+                <div class="form-row three">
+                  <label class="field">
+                    <span>max_new_tokens</span>
+                    <input id="maxNewTokens" type="text" placeholder="1280" />
+                  </label>
+                  <label class="field">
+                    <span>max_seq_length</span>
+                    <input id="maxSeqLength" type="text" placeholder="4096" />
+                  </label>
+                  <label class="field">
+                    <span>graph_top_k</span>
+                    <input id="graphTopK" type="text" placeholder="10" />
+                  </label>
+                </div>
+              </details>
+
+              <button class="primary-btn" id="runBtn" type="button">开始溯源分析</button>
+            </section>
+          </div>
+        </section>
+
+        <section class="page-view" id="page-results">
+          <div class="two-column result-layout">
+            <section class="panel">
+              <div class="section-title">
+                <span>任务进度</span>
+                <span class="method-tag">图片识别 → 文字总结 → LLM 溯源</span>
+              </div>
+              <div class="progress-wrap">
+                <div class="progress-head">
+                  <span id="progressStage">等待输入</span>
+                  <strong id="progressPercent">0%</strong>
+                </div>
+                <div class="progress-bar"><div id="progressFill"></div></div>
+                <p id="progressMessage">上传图片、填写参数和问题后即可开始。</p>
+              </div>
+              <h2>流程时间线</h2>
+              <div class="timeline compact-timeline" id="pipelineTimeline">
+                <div class="empty-state">任务完成后显示各阶段耗时。</div>
+              </div>
+            </section>
+
+            <section class="panel">
+              <div class="section-title">
+                <span>多问题答案</span>
+                <span class="muted">每个问题独立成卡片</span>
+              </div>
+              <div class="answers-list" id="answersList">
+                <div class="empty-state">提交任务后，每个问题的答案会按顺序显示在这里。</div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section class="page-view" id="page-visual">
+          <section class="panel visual-workbench">
+            <div class="section-title">
+              <span>视觉证据</span>
+              <span class="muted" id="visualCount">暂无</span>
+            </div>
+            <div class="legend-row">
+              <span><i class="legend normal"></i>一般区域</span>
+              <span><i class="legend tooth"></i>牙孔区域</span>
+              <span><i class="legend weld"></i>焊接区域</span>
+              <span><i class="legend key"></i>重点区域</span>
+            </div>
+            <div class="visual-page-grid">
+              <div class="visual-gallery" id="visualGallery">
+                <div class="empty-state">视觉层完成后，这里会显示带框识别图。</div>
+              </div>
+              <aside class="visual-side">
+                <h2>区域统计</h2>
+                <div class="region-grid" id="regionCards">
+                  <div class="empty-state">暂无区域统计。</div>
+                </div>
+              </aside>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="section-title">
+              <span>缺陷明细表</span>
+              <span class="muted">用于证明结果来自可追溯视觉证据</span>
+            </div>
+            <div class="table-wrap" id="defectTable">
+              <div class="empty-state">暂无缺陷明细。</div>
+            </div>
+          </section>
+        </section>
+
+        <section class="page-view" id="page-prompt">
+          <div class="two-column">
+            <section class="panel">
+              <div class="section-title">
+                <span>视觉层文字总结</span>
+                <button class="ghost-btn" id="copyVisualBtn" type="button">复制</button>
+              </div>
+              <pre id="visualText" class="small-pre tall">暂无</pre>
+            </section>
+            <section class="panel">
+              <div class="section-title">
+                <span>参数表</span>
+                <span class="muted">表单与 JSON 额外字段均保留</span>
+              </div>
+              <div class="table-wrap" id="paramsTable">
+                <div class="empty-state">暂无参数。</div>
+              </div>
+            </section>
+          </div>
+
+          <section class="panel">
+            <div class="section-title">
+              <span>Prompt 证据预览</span>
+              <span class="muted">从答案卡片点击“查看 Prompt”后显示</span>
+            </div>
+            <div class="prompt-preview" id="promptPreview">
+              <div class="empty-state">选择答案卡片中的 Prompt 可查看。</div>
+            </div>
+          </section>
+        </section>
+
+        <section class="page-view" id="page-history">
+          <section class="panel">
+            <div class="section-title">
+              <span>历史记录</span>
+              <span class="muted" id="historyCount">0 项</span>
+            </div>
+            <div class="history-filter">
+              <input id="historySearch" type="text" placeholder="按样本编号过滤" />
+            </div>
+            <div class="history-list" id="historyList">
+              <div class="empty-state">暂无历史文件。</div>
+            </div>
+            <div class="history-detail" id="historyDetail"></div>
+          </section>
+        </section>
+
+        <section class="page-view" id="page-download">
+          <section class="panel">
+            <div class="section-title">
+              <span>下载中心</span>
+              <span class="muted">包含结果 JSON、答案、Prompt、视觉图和 zip 包</span>
+            </div>
+            <div class="download-summary" id="downloadSummary">
+              <div class="empty-state">完成一次任务后可下载本次输出包。</div>
+            </div>
+            <div class="artifact-list" id="artifactList"></div>
+          </section>
+        </section>
+      </main>
+    </div>
+
+    <div class="image-modal hidden" id="imageModal">
+      <button class="modal-close" id="modalClose" type="button">x</button>
+      <img id="modalImage" alt="视觉识别大图" />
+      <p id="modalCaption"></p>
+    </div>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

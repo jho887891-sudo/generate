@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>历史记录 - 财务对账系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #3498db, #2c3e50);
+        }
+
+        h1 {
+            text-align: center;
+            margin: 15px 0 30px;
+            color: #2c3e50;
+            font-size: 2.4rem;
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(to right, #3498db, #2c3e50);
+            margin: 15px auto 0;
+            border-radius: 2px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 1px solid #e0e0e0;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .tablink {
+            flex: 1;
+            min-width: 150px;
+            padding: 14px 0;
+            background: none;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            zindex: -1;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .tablink::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0;
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            transition: height 0.3s ease;
+            z-index: -1;
+        }
+
+        .tablink:hover {
+            color: white;
+        }
+
+        .tablink:hover::before {
+            height: 100%;
+        }
+
+        .tablink.active {
+            background: linear-gradient(to bottom, #3498db, #2980b9);
+            color: white;
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);
+        }
+
+        .tabcontent {
+            display: none;
+            padding: 25px;
+            border-radius: 10px;
+            background: #f8f9fa;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tabcontent.active {
+            display: block;
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.6rem;
+            font-weight: 600;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        p {
+            margin-bottom: 25px;
+            color: #5a6268;
+            line-height: 1.7;
+            font-size: 1.05rem;
+        }
+
+        /* 历史记录样式 */
+        .history-container {
+            margin-top: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .history-header {
+            display: flex;
+            background-color: #3498db;
+            color: white;
+            padding: 12px 15px;
+            font-weight: 600;
+        }
+
+        .history-header div {
+            flex: 1;
+            text-align: center;
+        }
+
+        .history-item {
+            display: flex;
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            align-items: center;
+            transition: background-color 0.3s;
+        }
+
+        .history-item:hover {
+            background-color: #f5f7fa;
+        }
+
+        .history-item div {
+            flex: 1;
+            text-align: center;
+        }
+
+        .history-type {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .history-filename {
+            color: #3498db;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        .history-filename:hover {
+            color: #2980b9;
+        }
+
+        .history-date {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+
+        .history-controls {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .no-history {
+            padding: 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+        }
+
+        .history-filter {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .history-filter select {
+            flex: 1;
+            min-width: 150px;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .history-filter button {
+            flex: 0 0 auto;
+            padding: 10px 15px;
+            width: auto;
+            margin-top: 0;
+            background: linear-gradient(to right, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .history-filter button:hover {
+            background: linear-gradient(to right, #2980b9, #2573a7);
+        }
+
+        .download-btn {
+            display: inline-block;
+            background: linear-gradient(to right, #2ecc71, #27ae60);
+            color: white;
+            padding: 14px 28px;
+            text-decoration: none;
+            border-radius: 8px;
+            margin-top: 20px;
+            margin-right: 12px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            text-align: center;
+            min-width: 200px;
+            box-shadow: 0 4px 12px rgba(46, 204, 113, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-btn::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20px;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: rotate(25deg);
+            transition: all 0.6s;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(46, 204, 113, 0.4);
+            text-decoration: none;
+        }
+
+        .download-btn:hover::after {
+            left: 120%;
+        }
+
+        .download-btn + .download-btn {
+            background: linear-gradient(to right, #17a2b8, #138496);
+        }
+
+        .download-btn + .download-btn:hover {
+            background: linear-gradient(to right, #138496, #117a8b);
+        }
+
+        /* 操作指引 */
+        .instructions {
+            background-color: #f0f8ff;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1.2rem;
+        }
+
+        .instructions ul {
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 8px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                max-width: 95%;
+            }
+
+            h1 {
+                font-size: 2rem;
+                padding-bottom: 10px;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            .tabs {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tablink {
+                border-radius: 8px;
+                margin-bottom: 5px;
+            }
+
+            .tabcontent {
+                padding: 20px;
+            }
+
+            .download-btn {
+                display: block;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+
+            .history-header, .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .history-header div, .history-item div {
+                width: 100%;
+                text-align: left;
+                margin-bottom: 5px;
+            }
+
+            .history-filter {
+                flex-direction: column;
+            }
+
+            .history-filter select, .history-filter button {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+                background: #f4f4f4;
+            }
+
+            .container {
+                padding: 20px 15px;
+                border-radius: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.3rem;
+            }
+
+            .download-btn {
+                padding: 12px;
+                font-size: 1rem;
+                min-width: auto;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .fa-spinner {
+            font-size: 2rem;
+            color: #3498db;
+            margin-bottom: 15px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: linear-gradient(135deg, #ffebee, #ffcdd2);
+            color: #c62828;
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #ffcdd2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>历史记录</h1>
+
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> 操作指引</h3>
+            <ul>
+                <li>显示最近15天的处理记录</li>
+                <li>点击文件名下载处理结果</li>
+                <li>系统每半个月自动清理历史记录</li>
+                <li>记录包含处理时间和任务类型</li>
+            </ul>
+        </div>
+
+        <div class="history-controls">
+            <button onclick="loadHistory()" class="download-btn">
+                <i class="fas fa-sync-alt"></i> 刷新记录
+            </button>
+        </div>
+
+        <div class="history-filter">
+            <select id="historyTypeFilter">
+                <option value="all">所有类型</option>
+                <option value="pdf_to_excel">PDF转Excel</option>
+                <option value="reconcile_excel">Excel对账</option>
+                <option value="reconcile_delivery">送货单对账</option>
+                <option value="reconcile_purchase">采购对账</option>
+                <option value="negative_quantity">数量取负</option>
+            </select>
+
+            <select id="historyDateFilter">
+                <option value="all">所有时间</option>
+                <option value="today">今天</option>
+                <option value="week">本周</option>
+                <option value="month">本月</option>
+            </select>
+
+            <button onclick="loadHistory()">
+                <i class="fas fa-filter"></i> 筛选
+            </button>
+        </div>
+
+        <div class="history-container" id="historyContainer">
+            <div class="loading" id="historyLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>加载历史记录中...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 添加CSRF令牌处理
+        function getCSRFToken() {
+            const cookies = document.cookie.split(';');
+            for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'csrftoken') {
+                    return decodeURIComponent(value);
+                }
+            }
+            return '';
+        }
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', function() {
+            loadHistory();
+        });
+
+        // 加载历史记录
+        function loadHistory() {
+            const container = document.getElementById('historyContainer');
+            container.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner fa-spin"></i>
+                    <p>加载历史记录中...</p>
+                </div>
+            `;
+
+            const typeFilter = document.getElementById('historyTypeFilter').value;
+            const dateFilter = document.getElementById('historyDateFilter').value;
+
+            fetch(`/history?type=${typeFilter}&date=${dateFilter}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.history.length > 0) {
+                        renderHistory(data.history);
+                    } else {
+                        container.innerHTML = '<div class="no-history">暂无历史记录</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('加载历史记录失败:', error);
+                    container.innerHTML = '<div class="error">加载历史记录失败，请重试</div>';
+                });
+        }
+
+        // 渲染历史记录
+        function renderHistory(history) {
+            const container = document.getElementById('historyContainer');
+            let html = `
+                <div class="history-header">
+                    <div>任务类型</div>
+                    <div>文件名</div>
+                    <div>处理时间</div>
+                </div>
+            `;
+
+            history.forEach(record => {
+                // 格式化日期
+                const date = new Date(record.timestamp);
+                const formattedDate = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+
+                // 任务类型中文名称
+                let typeName = '';
+                switch(record.task_type) {
+                    case 'pdf_to_excel':
+                        typeName = 'PDF转Excel';
+                        break;
+                    case 'reconcile_excel':
+                        typeName = 'Excel对账';
+                        break;
+                    case 'reconcile_delivery':
+                        typeName = '送货单对账';
+                        break;
+                    case 'reconcile_purchase':
+                        typeName = '采购对账';
+                        break;
+                    case 'negative_quantity':
+                        typeName = '数量取负';
+                        break;
+                    default:
+                        typeName = record.task_type;
+                }
+
+                html += `
+                    <div class="history-item">
+                        <div class="history-type">${typeName}</div>
+                        <div class="history-filename" onclick="downloadHistoryFile('${record.filename}')">
+                            ${record.filename}
+                        </div>
+                        <div class="history-date">${formattedDate}</div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        // 下载历史文件
+        function downloadHistoryFile(filename) {
+            window.open(`/download/${filename}`, '_blank');
+        }
+    </script>
+</body>
+</html>

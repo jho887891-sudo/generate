@@ -1,0 +1,1 @@
+# 该压缩包中的语料由 ChatGPT 按当前规则清洗生成：纯文本 Stage2 LoRA 数据，只包含 instruction/input/output。
